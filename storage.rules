@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(eventId) {
+      return isSignedIn() &&
+        firestore.get(/databases/(default)/documents/events/$(eventId)).data.createdBy == request.auth.uid;
+    }
+
+    match /events/{eventId}/payments/{paymentId}/{fileName} {
+      allow read: if isOwner(eventId);
+      allow write: if request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|application/pdf');
+    }
+  }
+}

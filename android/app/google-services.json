@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138977466044",
+    "project_id": "juntapp-dsagra",
+    "storage_bucket": "juntapp-dsagra.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138977466044:android:49eb6176defe8d77bfa2b9",
+        "android_client_info": {
+          "package_name": "com.example.juntapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWwrqpTqpaugH5ZaD8zXLAPrWA3qxC-JY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
