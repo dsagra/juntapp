@@ -31,7 +31,9 @@ class FirebaseAuthService {
         '[LOGIN] success uid=${credentials.user?.uid} email=${credentials.user?.email}',
       );
     } on FirebaseAuthException catch (e, stack) {
-      debugPrint('[LOGIN] FirebaseAuthException code=${e.code} message=${e.message}');
+      debugPrint(
+        '[LOGIN] FirebaseAuthException code=${e.code} message=${e.message}',
+      );
       debugPrint('[LOGIN] stack=$stack');
       rethrow;
     } catch (e, stack) {
@@ -67,7 +69,9 @@ class FirebaseAuthService {
       await user.updateDisplayName(name);
       debugPrint('[SIGNUP] displayName updated');
 
-      debugPrint('[SIGNUP] writing user profile in firestore users/${user.uid}...');
+      debugPrint(
+        '[SIGNUP] writing user profile in firestore users/${user.uid}...',
+      );
       await _firestore.collection('users').doc(user.uid).set({
         'id': user.uid,
         'email': email,

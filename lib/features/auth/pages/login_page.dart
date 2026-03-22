@@ -48,10 +48,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       await ref
           .read(authServiceProvider)
-          .signInWithEmailPassword(
-            email: email,
-            password: _passwordCtrl.text,
-          );
+          .signInWithEmailPassword(email: email, password: _passwordCtrl.text);
       debugPrint('[LOGIN_UI] signIn finished without exception');
       debugPrint('[LOGIN_UI] waiting auth state stream to redirect');
     } on FirebaseAuthException catch (e, stack) {
