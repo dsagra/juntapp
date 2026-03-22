@@ -20,7 +20,7 @@ _PublicEventModel _$PublicEventModelFromJson(Map<String, dynamic> json) =>
       transferAlias: json['transferAlias'] as String,
       cvu: json['cvu'] as String?,
       accountHolder: json['accountHolder'] as String,
-      instructions: json['instructions'] as String,
+      publicToken: json['publicToken'] as String?,
       isActive: json['isActive'] as bool,
     );
 
@@ -38,6 +38,6 @@ Map<String, dynamic> _$PublicEventModelToJson(_PublicEventModel instance) =>
       'transferAlias': instance.transferAlias,
       'cvu': instance.cvu,
       'accountHolder': instance.accountHolder,
-      'instructions': instance.instructions,
+      'publicToken': instance.publicToken,
       'isActive': instance.isActive,
     };

@@ -17,20 +17,26 @@ final paymentsProvider = StreamProvider.family<List<PaymentModel>, String>((
   return ref.watch(paymentRepositoryProvider).watchPayments(eventId);
 });
 
-final approvedPaymentsCountProvider = FutureProvider.family<int, String>((
+final approvedPaymentsCountProvider = Provider.family<AsyncValue<int>, String>((
   ref,
   eventId,
-) async {
+) {
   return ref
-      .watch(paymentRepositoryProvider)
-      .countByStatus(eventId, PaymentStatus.approved);
+      .watch(paymentsProvider(eventId))
+      .whenData(
+        (payments) =>
+            payments.where((p) => p.status == PaymentStatus.approved).length,
+      );
 });
 
-final pendingPaymentsCountProvider = FutureProvider.family<int, String>((
+final pendingPaymentsCountProvider = Provider.family<AsyncValue<int>, String>((
   ref,
   eventId,
-) async {
+) {
   return ref
-      .watch(paymentRepositoryProvider)
-      .countByStatus(eventId, PaymentStatus.pending);
+      .watch(paymentsProvider(eventId))
+      .whenData(
+        (payments) =>
+            payments.where((p) => p.status == PaymentStatus.pending).length,
+      );
 });

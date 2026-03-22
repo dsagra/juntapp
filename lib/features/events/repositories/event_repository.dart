@@ -17,17 +17,16 @@ class EventRepository {
       _firestore.collection('public_events');
 
   Stream<List<EventModel>> watchEventsByUser(String userId) {
-    return _eventsRef
-        .where('createdBy', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
+    return _eventsRef.where('createdBy', isEqualTo: userId).snapshots().map((
+      snapshot,
+    ) {
       final events = snapshot.docs
-              .map((doc) => EventModel.fromJson(doc.data()))
-              .toList(growable: false);
+          .map((doc) => EventModel.fromJson(doc.data()))
+          .toList(growable: false);
 
       events.sort((a, b) => a.eventDate.compareTo(b.eventDate));
       return events;
-        });
+    });
   }
 
   Stream<EventModel> watchEventById(String eventId) {
@@ -54,10 +53,9 @@ class EventRepository {
     required String transferAlias,
     String? cvu,
     required String accountHolder,
-    required String instructions,
     required bool isActive,
     required String slug,
-    String? publicToken,
+    required String publicToken,
     required String createdBy,
   }) async {
     final exists = await slugExists(slug);
@@ -78,7 +76,6 @@ class EventRepository {
       transferAlias: transferAlias,
       cvu: cvu,
       accountHolder: accountHolder,
-      instructions: instructions,
       isActive: isActive,
       slug: slug,
       publicToken: publicToken,
@@ -98,7 +95,7 @@ class EventRepository {
       transferAlias: transferAlias,
       cvu: cvu,
       accountHolder: accountHolder,
-      instructions: instructions,
+      publicToken: publicToken,
       isActive: isActive,
     );
 

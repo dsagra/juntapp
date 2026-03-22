@@ -17,7 +17,6 @@ sealed class EventModel with _$EventModel {
     required String transferAlias,
     String? cvu,
     required String accountHolder,
-    required String instructions,
     required bool isActive,
     required String slug,
     String? publicToken,

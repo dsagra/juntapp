@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_date_field.dart';
@@ -19,6 +20,8 @@ class CreateEventPage extends ConsumerStatefulWidget {
 }
 
 class _CreateEventPageState extends ConsumerState<CreateEventPage> {
+  static const _uuid = Uuid();
+
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
@@ -26,7 +29,6 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   final _aliasCtrl = TextEditingController();
   final _cvuCtrl = TextEditingController();
   final _holderCtrl = TextEditingController();
-  final _instructionsCtrl = TextEditingController();
   final _slugCtrl = TextEditingController();
   final _publicTokenCtrl = TextEditingController();
 
@@ -35,16 +37,27 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   bool _isActive = true;
   bool _saving = false;
   String? _error;
+  bool _slugEditedManually = false;
+  bool _isApplyingAutoSlug = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _publicTokenCtrl.text = _generatePublicToken();
+    _titleCtrl.addListener(_onTitleChanged);
+    _slugCtrl.addListener(_onSlugChanged);
+  }
 
   @override
   void dispose() {
+    _titleCtrl.removeListener(_onTitleChanged);
+    _slugCtrl.removeListener(_onSlugChanged);
     _titleCtrl.dispose();
     _descriptionCtrl.dispose();
     _amountCtrl.dispose();
     _aliasCtrl.dispose();
     _cvuCtrl.dispose();
     _holderCtrl.dispose();
-    _instructionsCtrl.dispose();
     _slugCtrl.dispose();
     _publicTokenCtrl.dispose();
     super.dispose();
@@ -85,12 +98,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
             transferAlias: _aliasCtrl.text.trim(),
             cvu: _cvuCtrl.text.trim().isEmpty ? null : _cvuCtrl.text.trim(),
             accountHolder: _holderCtrl.text.trim(),
-            instructions: _instructionsCtrl.text.trim(),
             isActive: _isActive,
             slug: _slugCtrl.text.trim().toLowerCase(),
-            publicToken: _publicTokenCtrl.text.trim().isEmpty
-                ? null
-                : _publicTokenCtrl.text.trim(),
+            publicToken: _publicTokenCtrl.text.trim(),
             createdBy: userId,
           );
 
@@ -200,14 +210,6 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     prefixIcon: Icons.person_outline,
                     validator: _required,
                   ),
-                  const SizedBox(height: 12),
-                  AppTextField(
-                    controller: _instructionsCtrl,
-                    label: 'Instrucciones',
-                    hint: 'Aclaraciones para enviar el pago',
-                    maxLines: 3,
-                    validator: _required,
-                  ),
                 ],
               ),
             ),
@@ -233,8 +235,14 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                   const SizedBox(height: 12),
                   AppTextField(
                     controller: _publicTokenCtrl,
-                    label: 'Token público (opcional)',
+                    label: 'Token público',
                     prefixIcon: Icons.password_outlined,
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'Campo obligatorio';
+                      if (text.length < 8) return 'Usá al menos 8 caracteres';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 8),
                   SwitchListTile.adaptive(
@@ -273,5 +281,55 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       return 'Campo obligatorio';
     }
     return null;
+  }
+
+  String _generatePublicToken() {
+    return _uuid.v4().replaceAll('-', '').substring(0, 16);
+  }
+
+  void _onTitleChanged() {
+    if (_slugEditedManually) return;
+
+    final generated = _slugify(_titleCtrl.text);
+    if (_slugCtrl.text == generated) return;
+
+    _isApplyingAutoSlug = true;
+    _slugCtrl.value = _slugCtrl.value.copyWith(
+      text: generated,
+      selection: TextSelection.collapsed(offset: generated.length),
+      composing: TextRange.empty,
+    );
+    _isApplyingAutoSlug = false;
+  }
+
+  void _onSlugChanged() {
+    if (_isApplyingAutoSlug) return;
+
+    final slug = _slugCtrl.text.trim();
+    if (slug.isEmpty) {
+      _slugEditedManually = false;
+      _onTitleChanged();
+      return;
+    }
+
+    final generated = _slugify(_titleCtrl.text);
+    _slugEditedManually = slug != generated;
+  }
+
+  String _slugify(String input) {
+    final normalized = input
+        .toLowerCase()
+        .trim()
+        .replaceAll(RegExp(r'[áàäâ]'), 'a')
+        .replaceAll(RegExp(r'[éèëê]'), 'e')
+        .replaceAll(RegExp(r'[íìïî]'), 'i')
+        .replaceAll(RegExp(r'[óòöô]'), 'o')
+        .replaceAll(RegExp(r'[úùüû]'), 'u')
+        .replaceAll('ñ', 'n');
+
+    return normalized
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-{2,}'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
   }
 }

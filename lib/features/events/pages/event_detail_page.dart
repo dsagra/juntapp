@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_formatters.dart';
@@ -31,6 +35,11 @@ class EventDetailPage extends ConsumerWidget {
           final pending = pendingCount.valueOrNull ?? 0;
           final expectedTotal = participants * event.amountPerParticipant;
           final progress = participants == 0 ? 0.0 : approved / participants;
+          final token = event.publicToken ?? '';
+          final publicLink = token.isEmpty
+              ? '/e/${event.slug}'
+              : '/e/${event.slug}?token=${Uri.encodeQueryComponent(token)}';
+          final absolutePublicLink = _buildAbsolutePublicLink(publicLink);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -55,8 +64,6 @@ class EventDetailPage extends ConsumerWidget {
                     Text('Alias: ${event.transferAlias}'),
                     if ((event.cvu ?? '').isNotEmpty) Text('CVU: ${event.cvu}'),
                     Text('Titular: ${event.accountHolder}'),
-                    const SizedBox(height: 8),
-                    Text('Instrucciones: ${event.instructions}'),
                   ],
                 ),
               ),
@@ -84,7 +91,23 @@ class EventDetailPage extends ConsumerWidget {
                 title: 'Link público',
                 subtitle:
                     'Compartilo por WhatsApp para que cada familia complete su carga.',
-                child: SelectableText('/e/${event.slug}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SelectableText(absolutePublicLink),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => _shareEventLink(
+                        context: context,
+                        eventTitle: event.title,
+                        eventDate: event.eventDate,
+                        publicLink: absolutePublicLink,
+                      ),
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Compartir por WhatsApp o email'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: AppConstants.sectionGap),
               FilledButton.icon(
@@ -105,5 +128,117 @@ class EventDetailPage extends ConsumerWidget {
         error: (error, _) => Text('Error: $error'),
       ),
     );
+  }
+
+  Future<void> _shareEventLink({
+    required BuildContext context,
+    required String eventTitle,
+    required DateTime eventDate,
+    required String publicLink,
+  }) async {
+    final absoluteLink = publicLink;
+
+    final message =
+        '''🎉 ¡Sumate a "$eventTitle"!
+
+Estamos organizando el aporte de forma simple con JuntApp 💚
+Podés confirmar y cargar tu pago en segundos.
+
+📅 Fecha del evento: ${AppFormatters.date(eventDate)}
+🔗 Link seguro: $absoluteLink
+
+¡Gracias por participar!''';
+
+    if (kIsWeb) {
+      await _showShareFallback(
+        context: context,
+        eventTitle: eventTitle,
+        message: message,
+        absoluteLink: absoluteLink,
+      );
+      return;
+    }
+
+    try {
+      await Share.share(message, subject: 'Invitación y pago - $eventTitle');
+    } catch (_) {
+      await _showShareFallback(
+        context: context,
+        eventTitle: eventTitle,
+        message: message,
+        absoluteLink: absoluteLink,
+      );
+    }
+  }
+
+  Future<void> _showShareFallback({
+    required BuildContext context,
+    required String eventTitle,
+    required String message,
+    required String absoluteLink,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.chat_outlined),
+                title: const Text('Compartir por WhatsApp'),
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  final whatsappMessage = [
+                    '🎉 ¡Sumate a "$eventTitle"!',
+                    'Organizamos el aporte con JuntApp 💚',
+                    '🔗 $absoluteLink',
+                  ].join('\n\n');
+
+                  final uri = Uri.https('api.whatsapp.com', '/send', {
+                    'text': whatsappMessage,
+                  });
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.email_outlined),
+                title: const Text('Compartir por email'),
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  final subject = Uri.encodeComponent(
+                    'Invitación y pago - $eventTitle',
+                  );
+                  final body = Uri.encodeComponent(message);
+                  final uri = Uri.parse('mailto:?subject=$subject&body=$body');
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy_outlined),
+                title: const Text('Copiar link'),
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  await Clipboard.setData(ClipboardData(text: absoluteLink));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Link copiado al portapapeles'),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _buildAbsolutePublicLink(String publicPath) {
+    final currentUri = Uri.base;
+    if (currentUri.fragment.startsWith('/')) {
+      return '${currentUri.origin}/#$publicPath';
+    }
+    return '${currentUri.origin}$publicPath';
   }
 }

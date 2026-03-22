@@ -18,7 +18,7 @@ sealed class PublicEventModel with _$PublicEventModel {
     required String transferAlias,
     String? cvu,
     required String accountHolder,
-    required String instructions,
+    String? publicToken,
     required bool isActive,
   }) = _PublicEventModel;
 

@@ -82,21 +82,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/e/:slug',
         builder: (context, state) {
           final slug = state.pathParameters['slug']!;
-          return PublicEventPage(slug: slug);
+          final token = state.uri.queryParameters['token'] ?? '';
+          return PublicEventPage(slug: slug, token: token);
         },
       ),
       GoRoute(
         path: '/e/:slug/upload',
         builder: (context, state) {
           final slug = state.pathParameters['slug']!;
-          return UploadReceiptPage(slug: slug);
+          final token = state.uri.queryParameters['token'] ?? '';
+          return UploadReceiptPage(slug: slug, token: token);
         },
       ),
       GoRoute(
         path: '/e/:slug/success',
         builder: (context, state) {
           final slug = state.pathParameters['slug']!;
-          return UploadSuccessPage(slug: slug);
+          final token = state.uri.queryParameters['token'] ?? '';
+          return UploadSuccessPage(slug: slug, token: token);
         },
       ),
     ],

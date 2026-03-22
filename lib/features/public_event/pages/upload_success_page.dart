@@ -5,9 +5,10 @@ import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/brand_logo.dart';
 
 class UploadSuccessPage extends StatelessWidget {
-  const UploadSuccessPage({super.key, required this.slug});
+  const UploadSuccessPage({super.key, required this.slug, required this.token});
 
   final String slug;
+  final String token;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,8 @@ class UploadSuccessPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: () => context.go('/e/$slug'),
+            onPressed: () =>
+                context.go('/e/$slug?token=${Uri.encodeQueryComponent(token)}'),
             child: const Text('Volver al evento'),
           ),
         ],

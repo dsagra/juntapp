@@ -10,9 +10,10 @@ import '../../../shared/widgets/section_card.dart';
 import '../providers/public_event_providers.dart';
 
 class PublicEventPage extends ConsumerWidget {
-  const PublicEventPage({super.key, required this.slug});
+  const PublicEventPage({super.key, required this.slug, required this.token});
 
   final String slug;
+  final String token;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,6 +25,12 @@ class PublicEventPage extends ConsumerWidget {
         data: (event) {
           if (event == null || !event.isActive) {
             return const Center(child: Text('Evento no disponible.'));
+          }
+
+          if (!_hasValidToken(event.publicToken, token)) {
+            return const Center(
+              child: Text('Link inválido. Revisá el enlace completo.'),
+            );
           }
 
           return Column(
@@ -60,14 +67,14 @@ class PublicEventPage extends ConsumerWidget {
                     Text('Alias: ${event.transferAlias}'),
                     if ((event.cvu ?? '').isNotEmpty) Text('CVU: ${event.cvu}'),
                     Text('Titular: ${event.accountHolder}'),
-                    const SizedBox(height: 8),
-                    Text('Instrucciones: ${event.instructions}'),
                   ],
                 ),
               ),
               const SizedBox(height: AppConstants.sectionGap),
               FilledButton(
-                onPressed: () => context.push('/e/$slug/upload'),
+                onPressed: () => context.push(
+                  '/e/$slug/upload?token=${Uri.encodeQueryComponent(token)}',
+                ),
                 child: const Text('Ya transferí, subir comprobante'),
               ),
             ],
@@ -77,5 +84,10 @@ class PublicEventPage extends ConsumerWidget {
         error: (error, _) => Text('Error: $error'),
       ),
     );
+  }
+
+  bool _hasValidToken(String? expected, String received) {
+    if (expected == null || expected.isEmpty) return false;
+    return received.isNotEmpty && received == expected;
   }
 }

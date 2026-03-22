@@ -13,9 +13,10 @@ import '../providers/public_event_providers.dart';
 import '../widgets/receipt_uploader.dart';
 
 class UploadReceiptPage extends ConsumerStatefulWidget {
-  const UploadReceiptPage({super.key, required this.slug});
+  const UploadReceiptPage({super.key, required this.slug, required this.token});
 
   final String slug;
+  final String token;
 
   @override
   ConsumerState<UploadReceiptPage> createState() => _UploadReceiptPageState();
@@ -26,6 +27,7 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   final _payerCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _tokenCtrl = TextEditingController();
 
   String? _participantId;
   PickedReceipt? _receipt;
@@ -33,10 +35,17 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _tokenCtrl.text = widget.token;
+  }
+
+  @override
   void dispose() {
     _payerCtrl.dispose();
     _amountCtrl.dispose();
     _notesCtrl.dispose();
+    _tokenCtrl.dispose();
     super.dispose();
   }
 
@@ -76,7 +85,9 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
           );
 
       if (mounted) {
-        context.go('/e/${widget.slug}/success');
+        context.go(
+          '/e/${widget.slug}/success?token=${Uri.encodeQueryComponent(widget.token)}',
+        );
       }
     } catch (e) {
       setState(() => _error = 'No pudimos enviar el comprobante: $e');
@@ -97,6 +108,10 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
         data: (event) {
           if (event == null) {
             return const Text('Evento no encontrado');
+          }
+
+          if (!_hasValidToken(event.publicToken, widget.token)) {
+            return const Text('Link inválido. Revisá el enlace completo.');
           }
 
           final participantsAsync = ref.watch(
@@ -151,6 +166,15 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                             label: 'Nombre de quien pagó',
                             prefixIcon: Icons.person_outline,
                             validator: _required,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _tokenCtrl,
+                            readOnly: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Token del enlace',
+                              prefixIcon: Icon(Icons.vpn_key_outlined),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           AppTextField(
@@ -225,5 +249,10 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
       return 'Campo obligatorio';
     }
     return null;
+  }
+
+  bool _hasValidToken(String? expected, String received) {
+    if (expected == null || expected.isEmpty) return false;
+    return received.isNotEmpty && received == expected;
   }
 }

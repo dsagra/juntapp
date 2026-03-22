@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PublicEventModel {
 
- String get eventId; String get slug; String get title; String get description;@TimestampConverter() DateTime get eventDate;@TimestampConverter() DateTime get paymentDeadline; double get amountPerParticipant; String get transferAlias; String? get cvu; String get accountHolder; String get instructions; bool get isActive;
+ String get eventId; String get slug; String get title; String get description;@TimestampConverter() DateTime get eventDate;@TimestampConverter() DateTime get paymentDeadline; double get amountPerParticipant; String get transferAlias; String? get cvu; String get accountHolder; String? get publicToken; bool get isActive;
 /// Create a copy of PublicEventModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PublicEventModelCopyWith<PublicEventModel> get copyWith => _$PublicEventModelCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PublicEventModel&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.eventDate, eventDate) || other.eventDate == eventDate)&&(identical(other.paymentDeadline, paymentDeadline) || other.paymentDeadline == paymentDeadline)&&(identical(other.amountPerParticipant, amountPerParticipant) || other.amountPerParticipant == amountPerParticipant)&&(identical(other.transferAlias, transferAlias) || other.transferAlias == transferAlias)&&(identical(other.cvu, cvu) || other.cvu == cvu)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.instructions, instructions) || other.instructions == instructions)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PublicEventModel&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.eventDate, eventDate) || other.eventDate == eventDate)&&(identical(other.paymentDeadline, paymentDeadline) || other.paymentDeadline == paymentDeadline)&&(identical(other.amountPerParticipant, amountPerParticipant) || other.amountPerParticipant == amountPerParticipant)&&(identical(other.transferAlias, transferAlias) || other.transferAlias == transferAlias)&&(identical(other.cvu, cvu) || other.cvu == cvu)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.publicToken, publicToken) || other.publicToken == publicToken)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,eventId,slug,title,description,eventDate,paymentDeadline,amountPerParticipant,transferAlias,cvu,accountHolder,instructions,isActive);
+int get hashCode => Object.hash(runtimeType,eventId,slug,title,description,eventDate,paymentDeadline,amountPerParticipant,transferAlias,cvu,accountHolder,publicToken,isActive);
 
 @override
 String toString() {
-  return 'PublicEventModel(eventId: $eventId, slug: $slug, title: $title, description: $description, eventDate: $eventDate, paymentDeadline: $paymentDeadline, amountPerParticipant: $amountPerParticipant, transferAlias: $transferAlias, cvu: $cvu, accountHolder: $accountHolder, instructions: $instructions, isActive: $isActive)';
+  return 'PublicEventModel(eventId: $eventId, slug: $slug, title: $title, description: $description, eventDate: $eventDate, paymentDeadline: $paymentDeadline, amountPerParticipant: $amountPerParticipant, transferAlias: $transferAlias, cvu: $cvu, accountHolder: $accountHolder, publicToken: $publicToken, isActive: $isActive)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $PublicEventModelCopyWith<$Res>  {
   factory $PublicEventModelCopyWith(PublicEventModel value, $Res Function(PublicEventModel) _then) = _$PublicEventModelCopyWithImpl;
 @useResult
 $Res call({
- String eventId, String slug, String title, String description,@TimestampConverter() DateTime eventDate,@TimestampConverter() DateTime paymentDeadline, double amountPerParticipant, String transferAlias, String? cvu, String accountHolder, String instructions, bool isActive
+ String eventId, String slug, String title, String description,@TimestampConverter() DateTime eventDate,@TimestampConverter() DateTime paymentDeadline, double amountPerParticipant, String transferAlias, String? cvu, String accountHolder, String? publicToken, bool isActive
 });
 
 
@@ -65,7 +65,7 @@ class _$PublicEventModelCopyWithImpl<$Res>
 
 /// Create a copy of PublicEventModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? eventId = null,Object? slug = null,Object? title = null,Object? description = null,Object? eventDate = null,Object? paymentDeadline = null,Object? amountPerParticipant = null,Object? transferAlias = null,Object? cvu = freezed,Object? accountHolder = null,Object? instructions = null,Object? isActive = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? eventId = null,Object? slug = null,Object? title = null,Object? description = null,Object? eventDate = null,Object? paymentDeadline = null,Object? amountPerParticipant = null,Object? transferAlias = null,Object? cvu = freezed,Object? accountHolder = null,Object? publicToken = freezed,Object? isActive = null,}) {
   return _then(_self.copyWith(
 eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -77,8 +77,8 @@ as DateTime,amountPerParticipant: null == amountPerParticipant ? _self.amountPer
 as double,transferAlias: null == transferAlias ? _self.transferAlias : transferAlias // ignore: cast_nullable_to_non_nullable
 as String,cvu: freezed == cvu ? _self.cvu : cvu // ignore: cast_nullable_to_non_nullable
 as String?,accountHolder: null == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
-as String,instructions: null == instructions ? _self.instructions : instructions // ignore: cast_nullable_to_non_nullable
-as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as String,publicToken: freezed == publicToken ? _self.publicToken : publicToken // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -161,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String instructions,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String? publicToken,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PublicEventModel() when $default != null:
-return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.instructions,_that.isActive);case _:
+return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.publicToken,_that.isActive);case _:
   return orElse();
 
 }
@@ -182,10 +182,10 @@ return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eve
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String instructions,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String? publicToken,  bool isActive)  $default,) {final _that = this;
 switch (_that) {
 case _PublicEventModel():
-return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.instructions,_that.isActive);}
+return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.publicToken,_that.isActive);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -199,10 +199,10 @@ return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eve
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String instructions,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String eventId,  String slug,  String title,  String description, @TimestampConverter()  DateTime eventDate, @TimestampConverter()  DateTime paymentDeadline,  double amountPerParticipant,  String transferAlias,  String? cvu,  String accountHolder,  String? publicToken,  bool isActive)?  $default,) {final _that = this;
 switch (_that) {
 case _PublicEventModel() when $default != null:
-return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.instructions,_that.isActive);case _:
+return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eventDate,_that.paymentDeadline,_that.amountPerParticipant,_that.transferAlias,_that.cvu,_that.accountHolder,_that.publicToken,_that.isActive);case _:
   return null;
 
 }
@@ -214,7 +214,7 @@ return $default(_that.eventId,_that.slug,_that.title,_that.description,_that.eve
 @JsonSerializable()
 
 class _PublicEventModel implements PublicEventModel {
-  const _PublicEventModel({required this.eventId, required this.slug, required this.title, required this.description, @TimestampConverter() required this.eventDate, @TimestampConverter() required this.paymentDeadline, required this.amountPerParticipant, required this.transferAlias, this.cvu, required this.accountHolder, required this.instructions, required this.isActive});
+  const _PublicEventModel({required this.eventId, required this.slug, required this.title, required this.description, @TimestampConverter() required this.eventDate, @TimestampConverter() required this.paymentDeadline, required this.amountPerParticipant, required this.transferAlias, this.cvu, required this.accountHolder, this.publicToken, required this.isActive});
   factory _PublicEventModel.fromJson(Map<String, dynamic> json) => _$PublicEventModelFromJson(json);
 
 @override final  String eventId;
@@ -227,7 +227,7 @@ class _PublicEventModel implements PublicEventModel {
 @override final  String transferAlias;
 @override final  String? cvu;
 @override final  String accountHolder;
-@override final  String instructions;
+@override final  String? publicToken;
 @override final  bool isActive;
 
 /// Create a copy of PublicEventModel
@@ -243,16 +243,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PublicEventModel&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.eventDate, eventDate) || other.eventDate == eventDate)&&(identical(other.paymentDeadline, paymentDeadline) || other.paymentDeadline == paymentDeadline)&&(identical(other.amountPerParticipant, amountPerParticipant) || other.amountPerParticipant == amountPerParticipant)&&(identical(other.transferAlias, transferAlias) || other.transferAlias == transferAlias)&&(identical(other.cvu, cvu) || other.cvu == cvu)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.instructions, instructions) || other.instructions == instructions)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PublicEventModel&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.eventDate, eventDate) || other.eventDate == eventDate)&&(identical(other.paymentDeadline, paymentDeadline) || other.paymentDeadline == paymentDeadline)&&(identical(other.amountPerParticipant, amountPerParticipant) || other.amountPerParticipant == amountPerParticipant)&&(identical(other.transferAlias, transferAlias) || other.transferAlias == transferAlias)&&(identical(other.cvu, cvu) || other.cvu == cvu)&&(identical(other.accountHolder, accountHolder) || other.accountHolder == accountHolder)&&(identical(other.publicToken, publicToken) || other.publicToken == publicToken)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,eventId,slug,title,description,eventDate,paymentDeadline,amountPerParticipant,transferAlias,cvu,accountHolder,instructions,isActive);
+int get hashCode => Object.hash(runtimeType,eventId,slug,title,description,eventDate,paymentDeadline,amountPerParticipant,transferAlias,cvu,accountHolder,publicToken,isActive);
 
 @override
 String toString() {
-  return 'PublicEventModel(eventId: $eventId, slug: $slug, title: $title, description: $description, eventDate: $eventDate, paymentDeadline: $paymentDeadline, amountPerParticipant: $amountPerParticipant, transferAlias: $transferAlias, cvu: $cvu, accountHolder: $accountHolder, instructions: $instructions, isActive: $isActive)';
+  return 'PublicEventModel(eventId: $eventId, slug: $slug, title: $title, description: $description, eventDate: $eventDate, paymentDeadline: $paymentDeadline, amountPerParticipant: $amountPerParticipant, transferAlias: $transferAlias, cvu: $cvu, accountHolder: $accountHolder, publicToken: $publicToken, isActive: $isActive)';
 }
 
 
@@ -263,7 +263,7 @@ abstract mixin class _$PublicEventModelCopyWith<$Res> implements $PublicEventMod
   factory _$PublicEventModelCopyWith(_PublicEventModel value, $Res Function(_PublicEventModel) _then) = __$PublicEventModelCopyWithImpl;
 @override @useResult
 $Res call({
- String eventId, String slug, String title, String description,@TimestampConverter() DateTime eventDate,@TimestampConverter() DateTime paymentDeadline, double amountPerParticipant, String transferAlias, String? cvu, String accountHolder, String instructions, bool isActive
+ String eventId, String slug, String title, String description,@TimestampConverter() DateTime eventDate,@TimestampConverter() DateTime paymentDeadline, double amountPerParticipant, String transferAlias, String? cvu, String accountHolder, String? publicToken, bool isActive
 });
 
 
@@ -280,7 +280,7 @@ class __$PublicEventModelCopyWithImpl<$Res>
 
 /// Create a copy of PublicEventModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? eventId = null,Object? slug = null,Object? title = null,Object? description = null,Object? eventDate = null,Object? paymentDeadline = null,Object? amountPerParticipant = null,Object? transferAlias = null,Object? cvu = freezed,Object? accountHolder = null,Object? instructions = null,Object? isActive = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? eventId = null,Object? slug = null,Object? title = null,Object? description = null,Object? eventDate = null,Object? paymentDeadline = null,Object? amountPerParticipant = null,Object? transferAlias = null,Object? cvu = freezed,Object? accountHolder = null,Object? publicToken = freezed,Object? isActive = null,}) {
   return _then(_PublicEventModel(
 eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -292,8 +292,8 @@ as DateTime,amountPerParticipant: null == amountPerParticipant ? _self.amountPer
 as double,transferAlias: null == transferAlias ? _self.transferAlias : transferAlias // ignore: cast_nullable_to_non_nullable
 as String,cvu: freezed == cvu ? _self.cvu : cvu // ignore: cast_nullable_to_non_nullable
 as String?,accountHolder: null == accountHolder ? _self.accountHolder : accountHolder // ignore: cast_nullable_to_non_nullable
-as String,instructions: null == instructions ? _self.instructions : instructions // ignore: cast_nullable_to_non_nullable
-as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as String,publicToken: freezed == publicToken ? _self.publicToken : publicToken // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
