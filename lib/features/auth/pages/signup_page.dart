@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/brand_logo.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/section_card.dart';
 import '../providers/auth_providers.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
@@ -50,7 +52,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     });
 
     try {
-      await ref.read(authServiceProvider).createAccountWithEmailPassword(
+      await ref
+          .read(authServiceProvider)
+          .createAccountWithEmailPassword(
             name: _nameCtrl.text.trim(),
             email: email,
             password: _passwordCtrl.text,
@@ -88,98 +92,112 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   Widget build(BuildContext context) {
     return AppMobileShell(
       title: 'Crear cuenta',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Empezá en JuntApp',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Creá tu cuenta para organizar eventos y pagos',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            AppTextField(
-              controller: _nameCtrl,
-              label: 'Nombre',
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Ingresá tu nombre';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _emailCtrl,
-              label: 'Email',
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Ingresá tu email';
-                }
-                if (!value.contains('@')) {
-                  return 'Email inválido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _passwordCtrl,
-              label: 'Contraseña',
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Ingresá una contraseña';
-                }
-                if (value.length < 6) {
-                  return 'Mínimo 6 caracteres';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _confirmCtrl,
-              label: 'Confirmar contraseña',
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Confirmá tu contraseña';
-                }
-                if (value != _passwordCtrl.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const BrandLogo(
+            size: 128,
+            tagline:
+                'Creá tu cuenta y empezá a organizar pagos de forma simple.',
+            center: false,
+          ),
+          const SizedBox(height: 14),
+          SectionCard(
+            title: 'Datos de acceso',
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppTextField(
+                    controller: _nameCtrl,
+                    label: 'Nombre',
+                    hint: 'Nombre y apellido',
+                    prefixIcon: Icons.person_outline,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresá tu nombre';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _emailCtrl,
+                    label: 'Email',
+                    hint: 'organizador@email.com',
+                    prefixIcon: Icons.alternate_email,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Ingresá tu email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Email inválido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _passwordCtrl,
+                    label: 'Contraseña',
+                    hint: 'Mínimo 6 caracteres',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Ingresá una contraseña';
+                      }
+                      if (value.length < 6) {
+                        return 'Mínimo 6 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _confirmCtrl,
+                    label: 'Confirmar contraseña',
+                    hint: 'Repetí tu contraseña',
+                    prefixIcon: Icons.lock_reset_outlined,
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Confirmá tu contraseña';
+                      }
+                      if (value != _passwordCtrl.text) {
+                        return 'Las contraseñas no coinciden';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  PrimaryButton(
+                    label: 'Crear cuenta',
+                    loading: _loading,
+                    onPressed: _submit,
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => context.go('/login'),
+                    child: const Text('Ya tengo cuenta, ingresar'),
+                  ),
+                ],
               ),
-            ],
-            const SizedBox(height: 20),
-            PrimaryButton(
-              label: 'Crear cuenta',
-              loading: _loading,
-              onPressed: _submit,
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Ya tengo cuenta, ingresar'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

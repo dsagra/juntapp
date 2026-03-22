@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
+import '../../../shared/widgets/brand_logo.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../providers/public_event_providers.dart';
 
@@ -27,15 +29,24 @@ class PublicEventPage extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const BrandLogo(
+                size: 112,
+                showWordmark: false,
+                tagline: 'Juntar plata fácil',
+              ),
+              const SizedBox(height: 8),
+              Text(event.title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 6),
+              Text(
+                'Pagá y confirmá en menos de un minuto',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppConstants.sectionGap),
               SectionCard(
+                title: 'Datos del evento',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 6),
                     Text(event.description),
                     const SizedBox(height: 10),
                     Text('Fecha: ${AppFormatters.date(event.eventDate)}'),
@@ -54,7 +65,7 @@ class PublicEventPage extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppConstants.sectionGap),
               FilledButton(
                 onPressed: () => context.push('/e/$slug/upload'),
                 child: const Text('Ya transferí, subir comprobante'),

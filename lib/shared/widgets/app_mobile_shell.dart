@@ -18,6 +18,8 @@ class AppMobileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: Text(title), actions: actions),
       floatingActionButton: floatingActionButton,
@@ -27,12 +29,27 @@ class AppMobileShell extends StatelessWidget {
             constraints: const BoxConstraints(
               maxWidth: AppConstants.mobileMaxWidth,
             ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.pageHorizontalPadding,
-                vertical: AppConstants.pageVerticalPadding,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    scheme.primaryContainer.withValues(alpha: 0.16),
+                    scheme.surface,
+                    scheme.surface,
+                  ],
+                ),
               ),
-              child: child,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.pageHorizontalPadding,
+                  AppConstants.pageVerticalPadding,
+                  AppConstants.pageHorizontalPadding,
+                  AppConstants.pageVerticalPadding + 24,
+                ),
+                child: child,
+              ),
             ),
           ),
         ),

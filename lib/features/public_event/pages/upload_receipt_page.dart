@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_dropdown_field.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/section_card.dart';
 import '../../payments/providers/payment_providers.dart';
 import '../providers/public_event_providers.dart';
 import '../widgets/receipt_uploader.dart';
@@ -109,67 +111,85 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Completá estos datos para confirmar tu pago',
+                      'Confirmación de pago',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Completá los datos para que el organizador pueda validar tu aporte.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 12),
-                    AppDropdownField<String>(
-                      label: 'Hijo/a',
-                      value: _participantId,
-                      items: participants
-                          .map(
-                            (participant) => DropdownMenuItem(
-                              value: participant.id,
-                              child: Text(participant.childName),
+                    const SizedBox(height: AppConstants.sectionGap),
+                    SectionCard(
+                      title: 'Datos del pago',
+                      child: Column(
+                        children: [
+                          AppDropdownField<String>(
+                            label: 'Hijo/a',
+                            prefixIcon: Icons.child_care_outlined,
+                            value: _participantId,
+                            items: participants
+                                .map(
+                                  (participant) => DropdownMenuItem(
+                                    value: participant.id,
+                                    child: Text(participant.childName),
+                                  ),
+                                )
+                                .toList(growable: false),
+                            onChanged: (value) =>
+                                setState(() => _participantId = value),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Campo obligatorio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          AppTextField(
+                            controller: _payerCtrl,
+                            label: 'Nombre de quien pagó',
+                            prefixIcon: Icons.person_outline,
+                            validator: _required,
+                          ),
+                          const SizedBox(height: 12),
+                          AppTextField(
+                            controller: _amountCtrl,
+                            label: 'Monto abonado',
+                            hint: 'Ej: 15000',
+                            prefixIcon: Icons.payments_outlined,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                          )
-                          .toList(growable: false),
-                      onChanged: (value) =>
-                          setState(() => _participantId = value),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Campo obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      controller: _payerCtrl,
-                      label: 'Nombre de quien pagó',
-                      validator: _required,
-                    ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      controller: _amountCtrl,
-                      label: 'Monto abonado',
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+                              if (text.isEmpty) {
+                                return 'Campo obligatorio';
+                              }
+                              final amount = double.tryParse(text);
+                              if (amount == null || amount <= 0) {
+                                return 'Monto inválido';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          AppTextField(
+                            controller: _notesCtrl,
+                            label: 'Nota (opcional)',
+                            hint: 'Dato extra para el organizador',
+                            maxLines: 3,
+                          ),
+                        ],
                       ),
-                      validator: (value) {
-                        final text = value?.trim() ?? '';
-                        if (text.isEmpty) {
-                          return 'Campo obligatorio';
-                        }
-                        final amount = double.tryParse(text);
-                        if (amount == null || amount <= 0) {
-                          return 'Monto inválido';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 12),
-                    AppTextField(
-                      controller: _notesCtrl,
-                      label: 'Nota (opcional)',
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 12),
-                    ReceiptUploader(onChanged: (receipt) => _receipt = receipt),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Subir comprobante es opcional por ahora.',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(height: AppConstants.sectionGap),
+                    SectionCard(
+                      title: 'Comprobante (opcional)',
+                      subtitle: 'Podés enviarlo ahora o más tarde.',
+                      child: ReceiptUploader(
+                        onChanged: (receipt) => _receipt = receipt,
+                      ),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
@@ -180,7 +200,7 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppConstants.sectionGap),
                     PrimaryButton(
                       label: 'Enviar comprobante',
                       loading: _saving,

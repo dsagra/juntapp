@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
@@ -31,14 +32,18 @@ class ParticipantsPage extends ConsumerWidget {
               title: 'No hay participantes',
               subtitle:
                   'Agregá el primer participante para habilitar el flujo público.',
+              icon: Icons.groups_2_outlined,
             );
           }
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: participants
                 .map((participant) {
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(
+                      bottom: AppConstants.sectionGap,
+                    ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(12),
                       title: Text(participant.childName),
@@ -103,10 +108,7 @@ class ParticipantsPage extends ConsumerWidget {
 }
 
 class _ParticipantEditorSheet extends ConsumerStatefulWidget {
-  const _ParticipantEditorSheet({
-    required this.eventId,
-    this.participant,
-  });
+  const _ParticipantEditorSheet({required this.eventId, this.participant});
 
   final String eventId;
   final ParticipantModel? participant;
@@ -116,7 +118,8 @@ class _ParticipantEditorSheet extends ConsumerStatefulWidget {
       _ParticipantEditorSheetState();
 }
 
-class _ParticipantEditorSheetState extends ConsumerState<_ParticipantEditorSheet> {
+class _ParticipantEditorSheetState
+    extends ConsumerState<_ParticipantEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _childCtrl;
   late final TextEditingController _familyCtrl;
@@ -150,7 +153,9 @@ class _ParticipantEditorSheetState extends ConsumerState<_ParticipantEditorSheet
     }
 
     if (widget.participant == null) {
-      await ref.read(participantRepositoryProvider).createParticipant(
+      await ref
+          .read(participantRepositoryProvider)
+          .createParticipant(
             eventId: widget.eventId,
             childName: _childCtrl.text.trim(),
             familyName: _familyCtrl.text.trim(),
@@ -159,7 +164,9 @@ class _ParticipantEditorSheetState extends ConsumerState<_ParticipantEditorSheet
             parentEmail: _emailCtrl.text.trim(),
           );
     } else {
-      await ref.read(participantRepositoryProvider).updateParticipant(
+      await ref
+          .read(participantRepositoryProvider)
+          .updateParticipant(
             eventId: widget.eventId,
             participant: widget.participant!.copyWith(
               childName: _childCtrl.text.trim(),
@@ -234,7 +241,9 @@ class _ParticipantEditorSheetState extends ConsumerState<_ParticipantEditorSheet
                   ),
                   const SizedBox(height: 16),
                   PrimaryButton(
-                    label: widget.participant == null ? 'Guardar' : 'Actualizar',
+                    label: widget.participant == null
+                        ? 'Guardar'
+                        : 'Actualizar',
                     onPressed: _save,
                   ),
                 ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
@@ -28,14 +29,18 @@ class PaymentsReviewPage extends ConsumerWidget {
               title: 'Sin pagos cargados',
               subtitle:
                   'Los comprobantes aparecerán acá para aprobar o rechazar.',
+              icon: Icons.receipt_long_outlined,
             );
           }
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: payments
                 .map((payment) {
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: const EdgeInsets.only(
+                      bottom: AppConstants.sectionGap,
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(

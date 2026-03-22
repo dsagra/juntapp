@@ -14,13 +14,18 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+
     return FilledButton(
       onPressed: loading ? null : onPressed,
       child: loading
-          ? const SizedBox(
+          ? SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(onPrimary),
+              ),
             )
           : Text(label),
     );

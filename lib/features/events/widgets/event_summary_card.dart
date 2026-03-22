@@ -21,6 +21,8 @@ class EventSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Card(
       child: InkWell(
         onTap: onTap,
@@ -30,8 +32,25 @@ class EventSummaryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(event.title, style: Theme.of(context).textTheme.titleMedium),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      event.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: scheme.primary),
+                ],
+              ),
               const SizedBox(height: 6),
+              Text(
+                event.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
               Text('Fecha: ${AppFormatters.date(event.eventDate)}'),
               Text(
                 'Monto: ${AppFormatters.currency(event.amountPerParticipant)}',
@@ -65,16 +84,23 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: scheme.primaryContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: scheme.onSurface),
+          ),
           Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),

@@ -8,6 +8,7 @@ class AppDropdownField<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.validator,
+    this.prefixIcon,
   });
 
   final String label;
@@ -15,6 +16,7 @@ class AppDropdownField<T> extends StatelessWidget {
   final List<DropdownMenuItem<T>> items;
   final void Function(T?) onChanged;
   final String? Function(T?)? validator;
+  final IconData? prefixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +24,12 @@ class AppDropdownField<T> extends StatelessWidget {
       initialValue: value,
       items: items,
       onChanged: onChanged,
+      isExpanded: true,
       validator: validator,
-      decoration: InputDecoration(labelText: label),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+      ),
     );
   }
 }

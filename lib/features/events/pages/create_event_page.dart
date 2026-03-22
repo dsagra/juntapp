@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_date_field.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/section_card.dart';
 import '../../auth/providers/current_user_id_provider.dart';
 import '../providers/event_providers.dart';
 
@@ -113,90 +115,139 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppTextField(
-              controller: _titleCtrl,
-              label: 'Título',
-              validator: _required,
+            Text(
+              'Configurá tu evento en pocos pasos',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _descriptionCtrl,
-              label: 'Descripción',
-              maxLines: 3,
-              validator: _required,
+            const SizedBox(height: 6),
+            Text(
+              'La invitación pública se genera automáticamente con el slug.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 12),
-            AppDateField(
-              label: 'Fecha del evento',
-              value: _eventDate,
-              onChanged: (value) => setState(() => _eventDate = value),
-            ),
-            const SizedBox(height: 12),
-            AppDateField(
-              label: 'Fecha límite de pago',
-              value: _deadline,
-              onChanged: (value) => setState(() => _deadline = value),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _amountCtrl,
-              label: 'Monto por participante',
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            const SizedBox(height: AppConstants.sectionGap),
+            SectionCard(
+              title: 'Información del evento',
+              child: Column(
+                children: [
+                  AppTextField(
+                    controller: _titleCtrl,
+                    label: 'Título',
+                    prefixIcon: Icons.celebration_outlined,
+                    validator: _required,
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _descriptionCtrl,
+                    label: 'Descripción',
+                    hint: 'Cumpleaños, cena, regalo, salida, etc.',
+                    maxLines: 3,
+                    validator: _required,
+                  ),
+                  const SizedBox(height: 12),
+                  AppDateField(
+                    label: 'Fecha del evento',
+                    value: _eventDate,
+                    onChanged: (value) => setState(() => _eventDate = value),
+                  ),
+                  const SizedBox(height: 12),
+                  AppDateField(
+                    label: 'Fecha límite de pago',
+                    value: _deadline,
+                    onChanged: (value) => setState(() => _deadline = value),
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _amountCtrl,
+                    label: 'Monto por participante',
+                    hint: 'Ej: 15000',
+                    prefixIcon: Icons.payments_outlined,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'Campo obligatorio';
+                      final amount = double.tryParse(text);
+                      if (amount == null || amount <= 0)
+                        return 'Monto inválido';
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (value) {
-                final text = value?.trim() ?? '';
-                if (text.isEmpty) return 'Campo obligatorio';
-                final amount = double.tryParse(text);
-                if (amount == null || amount <= 0) return 'Monto inválido';
-                return null;
-              },
             ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _aliasCtrl,
-              label: 'Alias de transferencia',
-              validator: _required,
+            const SizedBox(height: AppConstants.sectionGap),
+            SectionCard(
+              title: 'Datos de pago',
+              child: Column(
+                children: [
+                  AppTextField(
+                    controller: _aliasCtrl,
+                    label: 'Alias de transferencia',
+                    prefixIcon: Icons.account_balance_outlined,
+                    validator: _required,
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _cvuCtrl,
+                    label: 'CVU (opcional)',
+                    prefixIcon: Icons.numbers_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _holderCtrl,
+                    label: 'Titular de la cuenta',
+                    prefixIcon: Icons.person_outline,
+                    validator: _required,
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _instructionsCtrl,
+                    label: 'Instrucciones',
+                    hint: 'Aclaraciones para enviar el pago',
+                    maxLines: 3,
+                    validator: _required,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            AppTextField(controller: _cvuCtrl, label: 'CVU (opcional)'),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _holderCtrl,
-              label: 'Titular de la cuenta',
-              validator: _required,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _instructionsCtrl,
-              label: 'Instrucciones',
-              maxLines: 3,
-              validator: _required,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _slugCtrl,
-              label: 'Slug público',
-              validator: (value) {
-                final text = value?.trim() ?? '';
-                if (text.isEmpty) return 'Campo obligatorio';
-                if (!RegExp(r'^[a-z0-9-]+$').hasMatch(text)) {
-                  return 'Usá minúsculas, números y guiones';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _publicTokenCtrl,
-              label: 'Token público (opcional)',
-            ),
-            const SizedBox(height: 12),
-            SwitchListTile.adaptive(
-              value: _isActive,
-              title: const Text('Evento activo'),
-              contentPadding: EdgeInsets.zero,
-              onChanged: (value) => setState(() => _isActive = value),
+            const SizedBox(height: AppConstants.sectionGap),
+            SectionCard(
+              title: 'Publicación y estado',
+              child: Column(
+                children: [
+                  AppTextField(
+                    controller: _slugCtrl,
+                    label: 'Slug público',
+                    hint: 'cumple-juan-2026',
+                    prefixIcon: Icons.link_outlined,
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return 'Campo obligatorio';
+                      if (!RegExp(r'^[a-z0-9-]+$').hasMatch(text)) {
+                        return 'Usá minúsculas, números y guiones';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  AppTextField(
+                    controller: _publicTokenCtrl,
+                    label: 'Token público (opcional)',
+                    prefixIcon: Icons.password_outlined,
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile.adaptive(
+                    value: _isActive,
+                    title: const Text('Evento activo'),
+                    subtitle: const Text(
+                      'Si está activo, el link público funciona.',
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (value) => setState(() => _isActive = value),
+                  ),
+                ],
+              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
@@ -205,7 +256,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: AppConstants.sectionGap),
             PrimaryButton(
               label: 'Crear evento',
               loading: _saving,

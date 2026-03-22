@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_mobile_shell.dart';
+import '../../../shared/widgets/brand_logo.dart';
 
 class UploadSuccessPage extends StatelessWidget {
   const UploadSuccessPage({super.key, required this.slug});
@@ -15,6 +16,8 @@ class UploadSuccessPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const BrandLogo(size: 112, showWordmark: false),
+          const SizedBox(height: 8),
           Icon(
             Icons.check_circle,
             size: 72,

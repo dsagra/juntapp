@@ -1,6 +1,6 @@
 name: juntapp
 description: "JuntApp - Organización de pagos grupales para eventos."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -32,3 +32,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/

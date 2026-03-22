@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/section_card.dart';
@@ -34,17 +35,15 @@ class EventDetailPage extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(event.title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 6),
+              Text(event.description),
+              const SizedBox(height: AppConstants.sectionGap),
               SectionCard(
+                title: 'Información del evento',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.title,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(event.description),
-                    const SizedBox(height: 12),
                     Text('Fecha: ${AppFormatters.date(event.eventDate)}'),
                     Text(
                       'Límite: ${AppFormatters.date(event.paymentDeadline)}',
@@ -61,16 +60,12 @@ class EventDetailPage extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.sectionGap),
               SectionCard(
+                title: 'Estado y métricas',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Estado y métricas',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
                     Text('Participantes: $participants'),
                     Text(
                       'Total esperado: ${AppFormatters.currency(expectedTotal)}',
@@ -84,26 +79,14 @@ class EventDetailPage extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.sectionGap),
               SectionCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Link público',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    SelectableText('/e/${event.slug}'),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Compartilo por WhatsApp para que cada familia cargue el comprobante.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
+                title: 'Link público',
+                subtitle:
+                    'Compartilo por WhatsApp para que cada familia complete su carga.',
+                child: SelectableText('/e/${event.slug}'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.sectionGap),
               FilledButton.icon(
                 onPressed: () => context.push('/events/$eventId/participants'),
                 icon: const Icon(Icons.people_alt_outlined),

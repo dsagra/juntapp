@@ -32,8 +32,16 @@ class AppDateField extends StatelessWidget {
         }
       },
       child: InputDecorator(
-        decoration: InputDecoration(labelText: label),
-        child: Text(display),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.calendar_month_outlined),
+        ),
+        child: Row(
+          children: [
+            Expanded(child: Text(display)),
+            const Icon(Icons.expand_more),
+          ],
+        ),
       ),
     );
   }

@@ -5,10 +5,12 @@ class EmptyStateWidget extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    this.icon,
   });
 
   final String title;
   final String subtitle;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +20,12 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(
+              icon ?? Icons.inbox_outlined,
+              size: 34,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 10),
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium,
