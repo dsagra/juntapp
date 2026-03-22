@@ -11,7 +11,7 @@ service firebase.storage {
     }
 
     match /events/{eventId}/payments/{paymentId}/{fileName} {
-      allow read: if isOwner(eventId);
+      allow read: if true;
       allow write: if request.resource.size < 8 * 1024 * 1024
         && request.resource.contentType.matches('image/.*|application/pdf');
     }

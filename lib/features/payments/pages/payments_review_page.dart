@@ -70,10 +70,11 @@ class PaymentsReviewPage extends ConsumerWidget {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              if ((payment.receiptUrl ?? '').isNotEmpty)
+                              if ((payment.receiptUrl ?? '').isNotEmpty ||
+                                  (payment.receiptPath ?? '').isNotEmpty)
                                 OutlinedButton.icon(
                                   onPressed: () =>
-                                      _openReceipt(payment.receiptUrl!),
+                                      _openReceipt(context, ref, payment),
                                   icon: const Icon(Icons.open_in_new),
                                   label: const Text('Ver comprobante'),
                                 )
@@ -107,9 +108,27 @@ class PaymentsReviewPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _openReceipt(String url) async {
-    final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  Future<void> _openReceipt(
+    BuildContext context,
+    WidgetRef ref,
+    PaymentModel payment,
+  ) async {
+    try {
+      final directUrl = payment.receiptUrl;
+      final url = (directUrl != null && directUrl.isNotEmpty)
+          ? directUrl
+          : await ref
+                .read(paymentRepositoryProvider)
+                .resolveReceiptUrl(payment.receiptPath!);
+
+      final uri = Uri.parse(url);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir el comprobante.')),
+      );
+    }
   }
 
   Future<void> _approve(

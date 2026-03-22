@@ -52,9 +52,9 @@ class PaymentRepository {
     required String payerName,
     required double amount,
     required String notes,
-    Uint8List? fileBytes,
-    String? fileExtension,
-    String? receiptType,
+    required Uint8List fileBytes,
+    required String fileExtension,
+    required String receiptType,
   }) async {
     final paymentId = _uuid.v4();
     final now = DateTime.now();
@@ -63,19 +63,20 @@ class PaymentRepository {
     String? receiptPath;
     String? effectiveReceiptType;
 
-    if (fileBytes != null &&
-        fileExtension != null &&
-        fileExtension.isNotEmpty &&
-        receiptType != null &&
-        receiptType.isNotEmpty) {
-      final path = 'events/$eventId/payments/$paymentId/receipt.$fileExtension';
+    final path = 'events/$eventId/payments/$paymentId/receipt.$fileExtension';
 
-      final uploadTask = await _storage
-          .ref(path)
-          .putData(fileBytes, SettableMetadata(contentType: receiptType));
+    final uploadTask = await _storage
+        .ref(path)
+        .putData(fileBytes, SettableMetadata(contentType: receiptType));
+    receiptPath = path;
+    effectiveReceiptType = receiptType;
+
+    try {
       receiptUrl = await uploadTask.ref.getDownloadURL();
-      receiptPath = path;
-      effectiveReceiptType = receiptType;
+    } on FirebaseException catch (e) {
+      if (e.code != 'unauthorized') {
+        rethrow;
+      }
     }
 
     final payment = PaymentModel(
@@ -104,6 +105,10 @@ class PaymentRepository {
       SetOptions(merge: true),
     );
     await batch.commit();
+  }
+
+  Future<String> resolveReceiptUrl(String receiptPath) async {
+    return _storage.ref(receiptPath).getDownloadURL();
   }
 
   Future<void> approvePayment({

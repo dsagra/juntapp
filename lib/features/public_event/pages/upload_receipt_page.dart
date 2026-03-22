@@ -57,6 +57,11 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
       return;
     }
 
+    if (_receipt == null) {
+      setState(() => _error = 'El comprobante es obligatorio.');
+      return;
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -79,9 +84,9 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
             payerName: _payerCtrl.text.trim(),
             amount: double.parse(_amountCtrl.text.trim()),
             notes: _notesCtrl.text.trim(),
-            fileBytes: _receipt?.bytes,
-            fileExtension: _receipt?.extension,
-            receiptType: _receipt?.mimeType,
+            fileBytes: _receipt!.bytes,
+            fileExtension: _receipt!.extension,
+            receiptType: _receipt!.mimeType,
           );
 
       if (mounted) {
@@ -120,6 +125,39 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
 
           return participantsAsync.when(
             data: (participants) {
+              if (participants.isEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppConstants.sectionGap),
+                    Icon(
+                      Icons.celebration_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '¡Ya pagaron todos! 🎉',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Muchas gracias por participar. No quedan personas pendientes para cargar pago.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppConstants.sectionGap),
+                    FilledButton(
+                      onPressed: () => context.go(
+                        '/e/${widget.slug}?token=${Uri.encodeQueryComponent(widget.token)}',
+                      ),
+                      child: const Text('Volver al evento'),
+                    ),
+                  ],
+                );
+              }
+
               return Form(
                 key: _formKey,
                 child: Column(
@@ -209,10 +247,18 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                     ),
                     const SizedBox(height: AppConstants.sectionGap),
                     SectionCard(
-                      title: 'Comprobante (opcional)',
-                      subtitle: 'Podés enviarlo ahora o más tarde.',
+                      title: 'Comprobante',
+                      subtitle: 'Obligatorio para enviar el pago.',
                       child: ReceiptUploader(
-                        onChanged: (receipt) => _receipt = receipt,
+                        onChanged: (receipt) {
+                          setState(() {
+                            _receipt = receipt;
+                            if (receipt != null &&
+                                _error == 'El comprobante es obligatorio.') {
+                              _error = null;
+                            }
+                          });
+                        },
                       ),
                     ),
                     if (_error != null) ...[
