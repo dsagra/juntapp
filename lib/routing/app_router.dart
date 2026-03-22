@@ -18,12 +18,13 @@ import 'go_router_refresh_stream.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authServiceProvider).authStateChanges();
+  final authAsync = ref.watch(authStateChangesProvider);
 
   return GoRouter(
     initialLocation: '/dashboard',
     refreshListenable: GoRouterRefreshStream(authState),
     redirect: (context, state) {
-      final user = ref.read(currentUserProvider);
+      final user = authAsync.valueOrNull;
       final path = state.uri.path;
       final isPublic = path.startsWith('/e/');
       final isLogin = path == '/login';

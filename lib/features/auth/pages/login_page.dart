@@ -53,10 +53,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             password: _passwordCtrl.text,
           );
       debugPrint('[LOGIN_UI] signIn finished without exception');
-      if (mounted) {
-        debugPrint('[LOGIN_UI] navigating to /dashboard');
-        context.go('/dashboard');
-      }
+      debugPrint('[LOGIN_UI] waiting auth state stream to redirect');
     } on FirebaseAuthException catch (e, stack) {
       debugPrint(
         '[LOGIN_UI] FirebaseAuthException code=${e.code} message=${e.message}',

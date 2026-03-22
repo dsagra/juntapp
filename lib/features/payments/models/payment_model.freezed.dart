@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PaymentModel {
 
- String get id; String get eventId; String get participantId; String get childName; String get payerName; double get amount; String get notes; String get receiptUrl; String get receiptPath; String get receiptType; PaymentStatus get status;@TimestampConverter() DateTime get uploadedAt;@TimestampConverter() DateTime? get reviewedAt; String? get reviewedBy; String? get rejectReason;
+ String get id; String get eventId; String get participantId; String get childName; String get payerName; double get amount; String get notes; String? get receiptUrl; String? get receiptPath; String? get receiptType; PaymentStatus get status;@TimestampConverter() DateTime get uploadedAt;@NullableTimestampConverter() DateTime? get reviewedAt; String? get reviewedBy; String? get rejectReason;
 /// Create a copy of PaymentModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $PaymentModelCopyWith<$Res>  {
   factory $PaymentModelCopyWith(PaymentModel value, $Res Function(PaymentModel) _then) = _$PaymentModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String eventId, String participantId, String childName, String payerName, double amount, String notes, String receiptUrl, String receiptPath, String receiptType, PaymentStatus status,@TimestampConverter() DateTime uploadedAt,@TimestampConverter() DateTime? reviewedAt, String? reviewedBy, String? rejectReason
+ String id, String eventId, String participantId, String childName, String payerName, double amount, String notes, String? receiptUrl, String? receiptPath, String? receiptType, PaymentStatus status,@TimestampConverter() DateTime uploadedAt,@NullableTimestampConverter() DateTime? reviewedAt, String? reviewedBy, String? rejectReason
 });
 
 
@@ -65,7 +65,7 @@ class _$PaymentModelCopyWithImpl<$Res>
 
 /// Create a copy of PaymentModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? participantId = null,Object? childName = null,Object? payerName = null,Object? amount = null,Object? notes = null,Object? receiptUrl = null,Object? receiptPath = null,Object? receiptType = null,Object? status = null,Object? uploadedAt = null,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? rejectReason = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? participantId = null,Object? childName = null,Object? payerName = null,Object? amount = null,Object? notes = null,Object? receiptUrl = freezed,Object? receiptPath = freezed,Object? receiptType = freezed,Object? status = null,Object? uploadedAt = null,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? rejectReason = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -74,10 +74,10 @@ as String,childName: null == childName ? _self.childName : childName // ignore: 
 as String,payerName: null == payerName ? _self.payerName : payerName // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String,receiptUrl: null == receiptUrl ? _self.receiptUrl : receiptUrl // ignore: cast_nullable_to_non_nullable
-as String,receiptPath: null == receiptPath ? _self.receiptPath : receiptPath // ignore: cast_nullable_to_non_nullable
-as String,receiptType: null == receiptType ? _self.receiptType : receiptType // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,receiptUrl: freezed == receiptUrl ? _self.receiptUrl : receiptUrl // ignore: cast_nullable_to_non_nullable
+as String?,receiptPath: freezed == receiptPath ? _self.receiptPath : receiptPath // ignore: cast_nullable_to_non_nullable
+as String?,receiptType: freezed == receiptType ? _self.receiptType : receiptType // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as PaymentStatus,uploadedAt: null == uploadedAt ? _self.uploadedAt : uploadedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable
@@ -164,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String receiptUrl,  String receiptPath,  String receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @TimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String? receiptUrl,  String? receiptPath,  String? receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @NullableTimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PaymentModel() when $default != null:
 return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that.payerName,_that.amount,_that.notes,_that.receiptUrl,_that.receiptPath,_that.receiptType,_that.status,_that.uploadedAt,_that.reviewedAt,_that.reviewedBy,_that.rejectReason);case _:
@@ -185,7 +185,7 @@ return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String receiptUrl,  String receiptPath,  String receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @TimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String? receiptUrl,  String? receiptPath,  String? receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @NullableTimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)  $default,) {final _that = this;
 switch (_that) {
 case _PaymentModel():
 return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that.payerName,_that.amount,_that.notes,_that.receiptUrl,_that.receiptPath,_that.receiptType,_that.status,_that.uploadedAt,_that.reviewedAt,_that.reviewedBy,_that.rejectReason);}
@@ -202,7 +202,7 @@ return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String receiptUrl,  String receiptPath,  String receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @TimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String participantId,  String childName,  String payerName,  double amount,  String notes,  String? receiptUrl,  String? receiptPath,  String? receiptType,  PaymentStatus status, @TimestampConverter()  DateTime uploadedAt, @NullableTimestampConverter()  DateTime? reviewedAt,  String? reviewedBy,  String? rejectReason)?  $default,) {final _that = this;
 switch (_that) {
 case _PaymentModel() when $default != null:
 return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that.payerName,_that.amount,_that.notes,_that.receiptUrl,_that.receiptPath,_that.receiptType,_that.status,_that.uploadedAt,_that.reviewedAt,_that.reviewedBy,_that.rejectReason);case _:
@@ -217,7 +217,7 @@ return $default(_that.id,_that.eventId,_that.participantId,_that.childName,_that
 @JsonSerializable()
 
 class _PaymentModel implements PaymentModel {
-  const _PaymentModel({required this.id, required this.eventId, required this.participantId, required this.childName, required this.payerName, required this.amount, required this.notes, required this.receiptUrl, required this.receiptPath, required this.receiptType, required this.status, @TimestampConverter() required this.uploadedAt, @TimestampConverter() this.reviewedAt, this.reviewedBy, this.rejectReason});
+  const _PaymentModel({required this.id, required this.eventId, required this.participantId, required this.childName, required this.payerName, required this.amount, required this.notes, this.receiptUrl, this.receiptPath, this.receiptType, required this.status, @TimestampConverter() required this.uploadedAt, @NullableTimestampConverter() this.reviewedAt, this.reviewedBy, this.rejectReason});
   factory _PaymentModel.fromJson(Map<String, dynamic> json) => _$PaymentModelFromJson(json);
 
 @override final  String id;
@@ -227,12 +227,12 @@ class _PaymentModel implements PaymentModel {
 @override final  String payerName;
 @override final  double amount;
 @override final  String notes;
-@override final  String receiptUrl;
-@override final  String receiptPath;
-@override final  String receiptType;
+@override final  String? receiptUrl;
+@override final  String? receiptPath;
+@override final  String? receiptType;
 @override final  PaymentStatus status;
 @override@TimestampConverter() final  DateTime uploadedAt;
-@override@TimestampConverter() final  DateTime? reviewedAt;
+@override@NullableTimestampConverter() final  DateTime? reviewedAt;
 @override final  String? reviewedBy;
 @override final  String? rejectReason;
 
@@ -269,7 +269,7 @@ abstract mixin class _$PaymentModelCopyWith<$Res> implements $PaymentModelCopyWi
   factory _$PaymentModelCopyWith(_PaymentModel value, $Res Function(_PaymentModel) _then) = __$PaymentModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String eventId, String participantId, String childName, String payerName, double amount, String notes, String receiptUrl, String receiptPath, String receiptType, PaymentStatus status,@TimestampConverter() DateTime uploadedAt,@TimestampConverter() DateTime? reviewedAt, String? reviewedBy, String? rejectReason
+ String id, String eventId, String participantId, String childName, String payerName, double amount, String notes, String? receiptUrl, String? receiptPath, String? receiptType, PaymentStatus status,@TimestampConverter() DateTime uploadedAt,@NullableTimestampConverter() DateTime? reviewedAt, String? reviewedBy, String? rejectReason
 });
 
 
@@ -286,7 +286,7 @@ class __$PaymentModelCopyWithImpl<$Res>
 
 /// Create a copy of PaymentModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? participantId = null,Object? childName = null,Object? payerName = null,Object? amount = null,Object? notes = null,Object? receiptUrl = null,Object? receiptPath = null,Object? receiptType = null,Object? status = null,Object? uploadedAt = null,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? rejectReason = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? participantId = null,Object? childName = null,Object? payerName = null,Object? amount = null,Object? notes = null,Object? receiptUrl = freezed,Object? receiptPath = freezed,Object? receiptType = freezed,Object? status = null,Object? uploadedAt = null,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? rejectReason = freezed,}) {
   return _then(_PaymentModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -295,10 +295,10 @@ as String,childName: null == childName ? _self.childName : childName // ignore: 
 as String,payerName: null == payerName ? _self.payerName : payerName // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String,receiptUrl: null == receiptUrl ? _self.receiptUrl : receiptUrl // ignore: cast_nullable_to_non_nullable
-as String,receiptPath: null == receiptPath ? _self.receiptPath : receiptPath // ignore: cast_nullable_to_non_nullable
-as String,receiptType: null == receiptType ? _self.receiptType : receiptType // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,receiptUrl: freezed == receiptUrl ? _self.receiptUrl : receiptUrl // ignore: cast_nullable_to_non_nullable
+as String?,receiptPath: freezed == receiptPath ? _self.receiptPath : receiptPath // ignore: cast_nullable_to_non_nullable
+as String?,receiptType: freezed == receiptType ? _self.receiptType : receiptType // ignore: cast_nullable_to_non_nullable
+as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as PaymentStatus,uploadedAt: null == uploadedAt ? _self.uploadedAt : uploadedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable

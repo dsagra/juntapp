@@ -95,6 +95,14 @@ class FirebaseAuthService {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    debugPrint('[LOGOUT] start uid=${_auth.currentUser?.uid}');
+    try {
+      await _auth.signOut();
+      debugPrint('[LOGOUT] success');
+    } catch (e, stack) {
+      debugPrint('[LOGOUT] error=$e');
+      debugPrint('[LOGOUT] stack=$stack');
+      rethrow;
+    }
   }
 }

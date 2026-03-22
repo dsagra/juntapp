@@ -21,7 +21,20 @@ class DashboardPage extends ConsumerWidget {
       title: 'Mis eventos',
       actions: [
         IconButton(
-          onPressed: () => ref.read(authServiceProvider).signOut(),
+          onPressed: () async {
+            try {
+              await ref.read(authServiceProvider).signOut();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('No se pudo cerrar sesión: $e')),
+                );
+              }
+            }
+          },
           icon: const Icon(Icons.logout),
         ),
       ],

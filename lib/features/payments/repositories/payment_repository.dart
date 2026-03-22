@@ -41,18 +41,31 @@ class PaymentRepository {
     required String payerName,
     required double amount,
     required String notes,
-    required Uint8List fileBytes,
-    required String fileExtension,
-    required String receiptType,
+    Uint8List? fileBytes,
+    String? fileExtension,
+    String? receiptType,
   }) async {
     final paymentId = _uuid.v4();
     final now = DateTime.now();
-    final path = 'events/$eventId/payments/$paymentId/receipt.$fileExtension';
 
-    final uploadTask = await _storage
-        .ref(path)
-        .putData(fileBytes, SettableMetadata(contentType: receiptType));
-    final receiptUrl = await uploadTask.ref.getDownloadURL();
+    String? receiptUrl;
+    String? receiptPath;
+    String? effectiveReceiptType;
+
+    if (fileBytes != null &&
+        fileExtension != null &&
+        fileExtension.isNotEmpty &&
+        receiptType != null &&
+        receiptType.isNotEmpty) {
+      final path = 'events/$eventId/payments/$paymentId/receipt.$fileExtension';
+
+      final uploadTask = await _storage
+          .ref(path)
+          .putData(fileBytes, SettableMetadata(contentType: receiptType));
+      receiptUrl = await uploadTask.ref.getDownloadURL();
+      receiptPath = path;
+      effectiveReceiptType = receiptType;
+    }
 
     final payment = PaymentModel(
       id: paymentId,
@@ -63,8 +76,8 @@ class PaymentRepository {
       amount: amount,
       notes: notes,
       receiptUrl: receiptUrl,
-      receiptPath: path,
-      receiptType: receiptType,
+      receiptPath: receiptPath,
+      receiptType: effectiveReceiptType,
       status: PaymentStatus.pending,
       uploadedAt: now,
       reviewedAt: null,

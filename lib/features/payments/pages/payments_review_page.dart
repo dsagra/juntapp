@@ -65,12 +65,15 @@ class PaymentsReviewPage extends ConsumerWidget {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              OutlinedButton.icon(
-                                onPressed: () =>
-                                    _openReceipt(payment.receiptUrl),
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('Ver comprobante'),
-                              ),
+                              if ((payment.receiptUrl ?? '').isNotEmpty)
+                                OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _openReceipt(payment.receiptUrl!),
+                                  icon: const Icon(Icons.open_in_new),
+                                  label: const Text('Ver comprobante'),
+                                )
+                              else
+                                const Chip(label: Text('Sin comprobante')),
                               if (payment.status == PaymentStatus.pending)
                                 FilledButton(
                                   onPressed: () =>

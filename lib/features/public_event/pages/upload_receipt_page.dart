@@ -46,11 +46,6 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
       return;
     }
 
-    if (_receipt == null) {
-      setState(() => _error = 'Subí un comprobante.');
-      return;
-    }
-
     setState(() {
       _saving = true;
       _error = null;
@@ -73,9 +68,9 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
             payerName: _payerCtrl.text.trim(),
             amount: double.parse(_amountCtrl.text.trim()),
             notes: _notesCtrl.text.trim(),
-            fileBytes: _receipt!.bytes,
-            fileExtension: _receipt!.extension,
-            receiptType: _receipt!.mimeType,
+            fileBytes: _receipt?.bytes,
+            fileExtension: _receipt?.extension,
+            receiptType: _receipt?.mimeType,
           );
 
       if (mounted) {
@@ -171,6 +166,11 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                     ),
                     const SizedBox(height: 12),
                     ReceiptUploader(onChanged: (receipt) => _receipt = receipt),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Subir comprobante es opcional por ahora.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
                       Text(
