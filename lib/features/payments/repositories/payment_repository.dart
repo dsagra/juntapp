@@ -17,6 +17,17 @@ class PaymentRepository {
     return _firestore.collection('events').doc(eventId).collection('payments');
   }
 
+  DocumentReference<Map<String, dynamic>> _publicParticipantRef({
+    required String eventId,
+    required String participantId,
+  }) {
+    return _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('public_participants')
+        .doc(participantId);
+  }
+
   Stream<List<PaymentModel>> watchPayments(String eventId) {
     return _ref(
       eventId,
@@ -85,7 +96,14 @@ class PaymentRepository {
       rejectReason: null,
     );
 
-    await _ref(eventId).doc(paymentId).set(payment.toJson());
+    final batch = _firestore.batch();
+    batch.set(_ref(eventId).doc(paymentId), payment.toJson());
+    batch.set(
+      _publicParticipantRef(eventId: eventId, participantId: participantId),
+      {'status': 'pending_payment', 'updatedAt': Timestamp.fromDate(now)},
+      SetOptions(merge: true),
+    );
+    await batch.commit();
   }
 
   Future<void> approvePayment({
@@ -93,12 +111,31 @@ class PaymentRepository {
     required String paymentId,
     required String reviewerId,
   }) async {
-    await _ref(eventId).doc(paymentId).update({
+    final paymentDoc = await _ref(eventId).doc(paymentId).get();
+    final data = paymentDoc.data();
+    if (data == null) {
+      throw StateError('Pago no encontrado');
+    }
+
+    final participantId = data['participantId'] as String?;
+    if (participantId == null || participantId.isEmpty) {
+      throw StateError('Pago inválido: participantId faltante');
+    }
+
+    final now = DateTime.now();
+    final batch = _firestore.batch();
+    batch.update(_ref(eventId).doc(paymentId), {
       'status': PaymentStatus.approved.value,
-      'reviewedAt': Timestamp.fromDate(DateTime.now()),
+      'reviewedAt': Timestamp.fromDate(now),
       'reviewedBy': reviewerId,
       'rejectReason': null,
     });
+    batch.set(
+      _publicParticipantRef(eventId: eventId, participantId: participantId),
+      {'status': 'paid', 'updatedAt': Timestamp.fromDate(now)},
+      SetOptions(merge: true),
+    );
+    await batch.commit();
   }
 
   Future<void> rejectPayment({
@@ -107,11 +144,30 @@ class PaymentRepository {
     required String reviewerId,
     required String reason,
   }) async {
-    await _ref(eventId).doc(paymentId).update({
+    final paymentDoc = await _ref(eventId).doc(paymentId).get();
+    final data = paymentDoc.data();
+    if (data == null) {
+      throw StateError('Pago no encontrado');
+    }
+
+    final participantId = data['participantId'] as String?;
+    if (participantId == null || participantId.isEmpty) {
+      throw StateError('Pago inválido: participantId faltante');
+    }
+
+    final now = DateTime.now();
+    final batch = _firestore.batch();
+    batch.update(_ref(eventId).doc(paymentId), {
       'status': PaymentStatus.rejected.value,
-      'reviewedAt': Timestamp.fromDate(DateTime.now()),
+      'reviewedAt': Timestamp.fromDate(now),
       'reviewedBy': reviewerId,
       'rejectReason': reason,
     });
+    batch.set(
+      _publicParticipantRef(eventId: eventId, participantId: participantId),
+      {'status': 'active', 'updatedAt': Timestamp.fromDate(now)},
+      SetOptions(merge: true),
+    );
+    await batch.commit();
   }
 }

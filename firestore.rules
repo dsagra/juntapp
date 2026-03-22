@@ -24,7 +24,13 @@ service cloud.firestore {
 
       match /public_participants/{participantId} {
         allow read: if true;
-        allow write: if isOwner(eventId);
+        allow create, delete: if isOwner(eventId);
+        allow update: if isOwner(eventId)
+          || (
+            resource.data.status == 'active'
+            && request.resource.data.status == 'pending_payment'
+            && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt'])
+          );
       }
 
       match /payments/{paymentId} {

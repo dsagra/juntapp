@@ -11,21 +11,18 @@ class PaymentStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     late Color bg;
-    late Color fg;
+    const fg = Color(0xFF111111);
     late String label;
 
     switch (status) {
       case PaymentStatus.pending:
         bg = scheme.tertiaryContainer;
-        fg = scheme.onTertiaryContainer;
         label = 'Pendiente';
       case PaymentStatus.approved:
         bg = Colors.green.shade100;
-        fg = Colors.green.shade900;
         label = 'Aprobado';
       case PaymentStatus.rejected:
         bg = scheme.errorContainer;
-        fg = scheme.onErrorContainer;
         label = 'Rechazado';
     }
 
