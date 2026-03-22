@@ -121,6 +121,17 @@ class EventDetailPage extends ConsumerWidget {
                 icon: const Icon(Icons.receipt_long_outlined),
                 label: const Text('Revisar pagos'),
               ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => _confirmDeleteEvent(
+                  context: context,
+                  ref: ref,
+                  eventId: event.id,
+                  slug: event.slug,
+                ),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Eliminar evento'),
+              ),
             ],
           );
         },
@@ -191,7 +202,7 @@ Podés confirmar y cargar tu pago en segundos.
                   Navigator.of(sheetContext).pop();
                   final whatsappMessage = [
                     '🎉 ¡Sumate a "$eventTitle"!',
-                    'Organizamos el aporte con JuntApp 💚',
+                    'Juntar plata ahora es más fácil 💚',
                     '🔗 $absoluteLink',
                   ].join('\n\n');
 
@@ -240,5 +251,53 @@ Podés confirmar y cargar tu pago en segundos.
       return '${currentUri.origin}/#$publicPath';
     }
     return '${currentUri.origin}$publicPath';
+  }
+
+  Future<void> _confirmDeleteEvent({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String eventId,
+    required String slug,
+  }) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Eliminar evento'),
+          content: const Text(
+            'Esta acción no se puede deshacer. Se borrarán participantes, pagos y link público.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .deleteEvent(eventId: eventId, slug: slug);
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Evento eliminado.')));
+      context.go('/dashboard');
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar el evento.')),
+      );
+    }
   }
 }

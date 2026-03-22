@@ -17,16 +17,24 @@ class FirebaseAuthService {
 
   User? get currentUser => _auth.currentUser;
 
-  Future<void> signInWithEmailPassword({
-    required String email,
-    required String password,
-  }) async {
-    debugPrint('[LOGIN] start email=$email');
+  Future<void> signInWithGoogle() async {
+    debugPrint('[LOGIN] start google sign-in');
     try {
-      final credentials = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final provider = GoogleAuthProvider()
+        ..addScope('email')
+        ..setCustomParameters({'prompt': 'select_account'});
+
+      final credentials = kIsWeb
+          ? await _auth.signInWithPopup(provider)
+          : await _auth.signInWithProvider(provider);
+
+      final user = credentials.user;
+      if (user == null) {
+        throw StateError('No se pudo completar el acceso con Google.');
+      }
+
+      await _upsertUserProfile(user);
+
       debugPrint(
         '[LOGIN] success uid=${credentials.user?.uid} email=${credentials.user?.email}',
       );
@@ -43,59 +51,19 @@ class FirebaseAuthService {
     }
   }
 
-  Future<void> createAccountWithEmailPassword({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    debugPrint('[SIGNUP] start email=$email nameLength=${name.length}');
+  Future<void> _upsertUserProfile(User user) async {
+    final docRef = _firestore.collection('users').doc(user.uid);
+    final existing = await docRef.get();
 
-    try {
-      debugPrint('[SIGNUP] creating firebase auth user...');
-      final credentials = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final user = credentials.user;
-      if (user == null) {
-        debugPrint('[SIGNUP] error: credentials.user is null');
-        throw StateError('No se pudo crear la cuenta (user null).');
-      }
-
-      debugPrint('[SIGNUP] auth user created uid=${user.uid}');
-
-      debugPrint('[SIGNUP] updating displayName...');
-      await user.updateDisplayName(name);
-      debugPrint('[SIGNUP] displayName updated');
-
-      debugPrint(
-        '[SIGNUP] writing user profile in firestore users/${user.uid}...',
-      );
-      await _firestore.collection('users').doc(user.uid).set({
-        'id': user.uid,
-        'email': email,
-        'displayName': name,
-        'createdAt': Timestamp.fromDate(DateTime.now()),
-      });
-      debugPrint('[SIGNUP] firestore profile created successfully');
-    } on FirebaseAuthException catch (e, stack) {
-      debugPrint(
-        '[SIGNUP] FirebaseAuthException code=${e.code} message=${e.message}',
-      );
-      debugPrint('[SIGNUP] stack=$stack');
-      rethrow;
-    } on FirebaseException catch (e, stack) {
-      debugPrint(
-        '[SIGNUP] FirebaseException source=${e.plugin} code=${e.code} message=${e.message}',
-      );
-      debugPrint('[SIGNUP] stack=$stack');
-      rethrow;
-    } catch (e, stack) {
-      debugPrint('[SIGNUP] unexpected error=$e');
-      debugPrint('[SIGNUP] stack=$stack');
-      rethrow;
-    }
+    await docRef.set({
+      'id': user.uid,
+      'email': user.email,
+      'displayName': user.displayName,
+      'photoUrl': user.photoURL,
+      'provider': 'google',
+      if (!existing.exists) 'createdAt': Timestamp.fromDate(DateTime.now()),
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    }, SetOptions(merge: true));
   }
 
   Future<void> signOut() async {

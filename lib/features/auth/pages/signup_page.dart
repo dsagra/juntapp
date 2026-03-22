@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_mobile_shell.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/brand_logo.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/section_card.dart';
@@ -19,32 +18,11 @@ class SignUpPage extends ConsumerStatefulWidget {
 }
 
 class _SignUpPageState extends ConsumerState<SignUpPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
-
   bool _loading = false;
   String? _error;
 
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    _confirmCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      debugPrint('[SIGNUP_UI] validation failed');
-      return;
-    }
-
-    final email = _emailCtrl.text.trim();
-    debugPrint('[SIGNUP_UI] submit pressed email=$email');
+    debugPrint('[SIGNUP_UI] submit pressed google');
 
     setState(() {
       _loading = true;
@@ -52,13 +30,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     });
 
     try {
-      await ref
-          .read(authServiceProvider)
-          .createAccountWithEmailPassword(
-            name: _nameCtrl.text.trim(),
-            email: email,
-            password: _passwordCtrl.text,
-          );
+      await ref.read(authServiceProvider).signInWithGoogle();
 
       debugPrint('[SIGNUP_UI] account created, navigating to dashboard');
       if (mounted) {
@@ -103,98 +75,36 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           ),
           const SizedBox(height: 14),
           SectionCard(
-            title: 'Datos de acceso',
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppTextField(
-                    controller: _nameCtrl,
-                    label: 'Nombre',
-                    hint: 'Nombre y apellido',
-                    prefixIcon: Icons.person_outline,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresá tu nombre';
-                      }
-                      return null;
-                    },
-                  ),
+            title: 'Crear cuenta con Google',
+            subtitle: 'Usá tu cuenta de Google para empezar en segundos.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'No necesitás completar formularios ni crear contraseña.',
+                ),
+                if (_error != null) ...[
                   const SizedBox(height: 12),
-                  AppTextField(
-                    controller: _emailCtrl,
-                    label: 'Email',
-                    hint: 'organizador@email.com',
-                    prefixIcon: Icons.alternate_email,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Ingresá tu email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Email inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  AppTextField(
-                    controller: _passwordCtrl,
-                    label: 'Contraseña',
-                    hint: 'Mínimo 6 caracteres',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Ingresá una contraseña';
-                      }
-                      if (value.length < 6) {
-                        return 'Mínimo 6 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  AppTextField(
-                    controller: _confirmCtrl,
-                    label: 'Confirmar contraseña',
-                    hint: 'Repetí tu contraseña',
-                    prefixIcon: Icons.lock_reset_outlined,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Confirmá tu contraseña';
-                      }
-                      if (value != _passwordCtrl.text) {
-                        return 'Las contraseñas no coinciden';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: 'Crear cuenta',
-                    loading: _loading,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => context.go('/login'),
-                    child: const Text('Ya tengo cuenta, ingresar'),
                   ),
                 ],
-              ),
+                const SizedBox(height: 20),
+                PrimaryButton(
+                  label: 'Registrarme con Google',
+                  loading: _loading,
+                  onPressed: _submit,
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => context.go('/login'),
+                  child: const Text('Ya tengo cuenta, continuar con Google'),
+                ),
+              ],
             ),
           ),
         ],

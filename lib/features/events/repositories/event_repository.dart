@@ -106,4 +106,53 @@ class EventRepository {
 
     return eventId;
   }
+
+  Future<void> deleteEvent({
+    required String eventId,
+    required String slug,
+  }) async {
+    await _deleteSubcollectionDocs(eventId: eventId, subcollection: 'payments');
+    await _deleteSubcollectionDocs(
+      eventId: eventId,
+      subcollection: 'participants',
+    );
+    await _deleteSubcollectionDocs(
+      eventId: eventId,
+      subcollection: 'public_participants',
+    );
+
+    final batch = _firestore.batch();
+    batch.delete(_eventsRef.doc(eventId));
+    batch.delete(_publicEventsRef.doc(slug));
+    await batch.commit();
+  }
+
+  Future<void> _deleteSubcollectionDocs({
+    required String eventId,
+    required String subcollection,
+  }) async {
+    final snapshot = await _eventsRef
+        .doc(eventId)
+        .collection(subcollection)
+        .get();
+    if (snapshot.docs.isEmpty) return;
+
+    WriteBatch batch = _firestore.batch();
+    var operationCount = 0;
+
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+      operationCount++;
+
+      if (operationCount == 450) {
+        await batch.commit();
+        batch = _firestore.batch();
+        operationCount = 0;
+      }
+    }
+
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+  }
 }

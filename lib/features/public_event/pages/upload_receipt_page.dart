@@ -33,6 +33,7 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   PickedReceipt? _receipt;
   bool _saving = false;
   String? _error;
+  bool _amountPrefilled = false;
 
   @override
   void initState() {
@@ -113,6 +114,11 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
         data: (event) {
           if (event == null) {
             return const Text('Evento no encontrado');
+          }
+
+          if (!_amountPrefilled) {
+            _amountCtrl.text = _formatAmount(event.amountPerParticipant);
+            _amountPrefilled = true;
           }
 
           if (!_hasValidToken(event.publicToken, widget.token)) {
@@ -300,5 +306,10 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   bool _hasValidToken(String? expected, String received) {
     if (expected == null || expected.isEmpty) return false;
     return received.isNotEmpty && received == expected;
+  }
+
+  String _formatAmount(double amount) {
+    final hasDecimals = amount != amount.truncateToDouble();
+    return hasDecimals ? amount.toStringAsFixed(2) : amount.toInt().toString();
   }
 }
