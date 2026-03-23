@@ -2,11 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/analytics/app_analytics.dart';
+
 class FirebaseAuthService {
-  FirebaseAuthService(this._auth, this._firestore);
+  FirebaseAuthService(this._auth, this._firestore, this._analytics);
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final AppAnalytics _analytics;
 
   Stream<User?> authStateChanges() {
     return _auth.authStateChanges().map((user) {
@@ -34,11 +37,13 @@ class FirebaseAuthService {
       }
 
       await _upsertUserProfile(user);
+      await _analytics.logLoginSuccess();
 
       debugPrint(
         '[LOGIN] success uid=${credentials.user?.uid} email=${credentials.user?.email}',
       );
     } on FirebaseAuthException catch (e, stack) {
+      await _analytics.logLoginError(e.code);
       debugPrint(
         '[LOGIN] FirebaseAuthException code=${e.code} message=${e.message}',
       );
@@ -70,6 +75,7 @@ class FirebaseAuthService {
     debugPrint('[LOGOUT] start uid=${_auth.currentUser?.uid}');
     try {
       await _auth.signOut();
+      await _analytics.logLogout();
       debugPrint('[LOGOUT] success');
     } catch (e, stack) {
       debugPrint('[LOGOUT] error=$e');

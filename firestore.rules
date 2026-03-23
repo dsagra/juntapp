@@ -28,7 +28,14 @@ service cloud.firestore {
         allow update: if isOwner(eventId)
           || (
             resource.data.status == 'active'
-            && request.resource.data.status == 'pending_payment'
+            && request.resource.data.status in ['pending_payment', 'paid']
+            && (
+              request.resource.data.status == 'pending_payment'
+              || (
+                request.resource.data.status == 'paid'
+                && get(/databases/$(database)/documents/events/$(eventId)).data.autoApproveReceipts == true
+              )
+            )
             && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt'])
           );
       }
@@ -38,7 +45,13 @@ service cloud.firestore {
 
         allow create: if true
           && request.resource.data.eventId == eventId
-          && request.resource.data.status == 'pending';
+          && (
+            request.resource.data.status == 'pending'
+            || (
+              request.resource.data.status == 'approved'
+              && get(/databases/$(database)/documents/events/$(eventId)).data.autoApproveReceipts == true
+            )
+          );
       }
     }
 

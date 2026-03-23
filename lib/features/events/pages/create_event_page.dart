@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/providers/analytics_providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_date_field.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
@@ -35,6 +36,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   DateTime? _eventDate;
   DateTime? _deadline;
   bool _isActive = true;
+  bool _autoApproveReceipts = false;
   bool _saving = false;
   String? _error;
   bool _slugEditedManually = false;
@@ -99,13 +101,25 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
             cvu: _cvuCtrl.text.trim().isEmpty ? null : _cvuCtrl.text.trim(),
             accountHolder: _holderCtrl.text.trim(),
             isActive: _isActive,
+            autoApproveReceipts: _autoApproveReceipts,
             slug: _slugCtrl.text.trim().toLowerCase(),
             publicToken: _publicTokenCtrl.text.trim(),
             createdBy: userId,
           );
 
+      await ref
+          .read(appAnalyticsProvider)
+          .logEventCreated(autoApproveReceipts: _autoApproveReceipts);
+
       if (mounted) {
-        context.go('/events/$eventId');
+        final shouldManageParticipants = await _showPostCreateDialog();
+        if (!mounted) return;
+
+        context.go('/dashboard');
+        context.push('/events/$eventId');
+        if (shouldManageParticipants) {
+          context.push('/events/$eventId/participants');
+        }
       }
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('StateError: ', ''));
@@ -254,6 +268,17 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     contentPadding: EdgeInsets.zero,
                     onChanged: (value) => setState(() => _isActive = value),
                   ),
+                  const SizedBox(height: 8),
+                  SwitchListTile.adaptive(
+                    value: _autoApproveReceipts,
+                    title: const Text('Auto aprobar comprobantes'),
+                    subtitle: const Text(
+                      'Si lo activás, los comprobantes quedan aprobados automáticamente.',
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (value) =>
+                        setState(() => _autoApproveReceipts = value),
+                  ),
                 ],
               ),
             ),
@@ -331,5 +356,32 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'-{2,}'), '-')
         .replaceAll(RegExp(r'^-|-$'), '');
+  }
+
+  Future<bool> _showPostCreateDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Evento creado ✅'),
+          content: const Text(
+            'Para poder compartir el link del evento, primero necesitás cargar participantes.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Más tarde'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.people_alt_outlined),
+              label: const Text('Agregar participantes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 }

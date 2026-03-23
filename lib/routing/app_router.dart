@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/providers/firebase_providers.dart';
 import '../features/auth/pages/login_page.dart';
 import '../features/auth/pages/signup_page.dart';
 import '../features/auth/providers/auth_providers.dart';
@@ -19,9 +21,11 @@ import 'go_router_refresh_stream.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authServiceProvider).authStateChanges();
   final authAsync = ref.watch(authStateChangesProvider);
+  final analytics = ref.watch(firebaseAnalyticsProvider);
 
   return GoRouter(
     initialLocation: '/dashboard',
+    observers: [FirebaseAnalyticsObserver(analytics: analytics)],
     refreshListenable: GoRouterRefreshStream(authState),
     redirect: (context, state) {
       final user = authAsync.valueOrNull;

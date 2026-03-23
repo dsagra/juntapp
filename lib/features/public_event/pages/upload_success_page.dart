@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/providers/analytics_providers.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/brand_logo.dart';
+import '../../../shared/widgets/section_card.dart';
 
-class UploadSuccessPage extends StatelessWidget {
+class UploadSuccessPage extends ConsumerWidget {
   const UploadSuccessPage({super.key, required this.slug, required this.token});
 
   final String slug;
   final String token;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AppMobileShell(
       title: 'Comprobante enviado',
       child: Column(
@@ -37,9 +40,50 @@ class UploadSuccessPage extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
+          SectionCard(
+            title: '¿Querés organizar tu propio evento?',
+            subtitle:
+                'Creá tu cuenta y empezá a juntar pagos como anfitrión en minutos.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton.icon(
+                  onPressed: () async {
+                    await ref
+                        .read(appAnalyticsProvider)
+                        .logPublicSuccessPromoClicked('signup');
+                    if (context.mounted) {
+                      context.go('/signup');
+                    }
+                  },
+                  icon: const Icon(Icons.rocket_launch_outlined),
+                  label: const Text('Quiero crear mi evento'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () async {
+                    await ref
+                        .read(appAnalyticsProvider)
+                        .logPublicSuccessPromoClicked('login');
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  },
+                  child: const Text('Ya tengo cuenta, ingresar'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           FilledButton(
-            onPressed: () =>
-                context.go('/e/$slug?token=${Uri.encodeQueryComponent(token)}'),
+            onPressed: () async {
+              await ref
+                  .read(appAnalyticsProvider)
+                  .logPublicSuccessPromoClicked('back_to_event');
+              if (context.mounted) {
+                context.go('/e/$slug?token=${Uri.encodeQueryComponent(token)}');
+              }
+            },
             child: const Text('Volver al evento'),
           ),
         ],

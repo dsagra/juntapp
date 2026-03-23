@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/providers/analytics_providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
@@ -31,6 +32,7 @@ class EventDetailPage extends ConsumerWidget {
       child: eventAsync.when(
         data: (event) {
           final participants = participantsCount.valueOrNull ?? 0;
+          final hasParticipants = participants > 0;
           final approved = approvedCount.valueOrNull ?? 0;
           final pending = pendingCount.valueOrNull ?? 0;
           final expectedTotal = participants * event.amountPerParticipant;
@@ -97,15 +99,27 @@ class EventDetailPage extends ConsumerWidget {
                     SelectableText(absolutePublicLink),
                     const SizedBox(height: 12),
                     FilledButton.icon(
-                      onPressed: () => _shareEventLink(
-                        context: context,
-                        eventTitle: event.title,
-                        eventDate: event.eventDate,
-                        publicLink: absolutePublicLink,
-                      ),
+                      onPressed: hasParticipants
+                          ? () => _shareEventLink(
+                              context: context,
+                              ref: ref,
+                              eventTitle: event.title,
+                              eventDate: event.eventDate,
+                              publicLink: absolutePublicLink,
+                            )
+                          : null,
                       icon: const Icon(Icons.share_outlined),
                       label: const Text('Compartir por WhatsApp o email'),
                     ),
+                    if (!hasParticipants) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Primero agregá al menos un participante para habilitar el link.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -143,6 +157,7 @@ class EventDetailPage extends ConsumerWidget {
 
   Future<void> _shareEventLink({
     required BuildContext context,
+    required WidgetRef ref,
     required String eventTitle,
     required DateTime eventDate,
     required String publicLink,
@@ -163,6 +178,7 @@ Podés confirmar y cargar tu pago en segundos.
     if (kIsWeb) {
       await _showShareFallback(
         context: context,
+        ref: ref,
         eventTitle: eventTitle,
         message: message,
         absoluteLink: absoluteLink,
@@ -172,9 +188,11 @@ Podés confirmar y cargar tu pago en segundos.
 
     try {
       await Share.share(message, subject: 'Invitación y pago - $eventTitle');
+      await ref.read(appAnalyticsProvider).logPublicLinkShared('native_share');
     } catch (_) {
       await _showShareFallback(
         context: context,
+        ref: ref,
         eventTitle: eventTitle,
         message: message,
         absoluteLink: absoluteLink,
@@ -184,6 +202,7 @@ Podés confirmar y cargar tu pago en segundos.
 
   Future<void> _showShareFallback({
     required BuildContext context,
+    required WidgetRef ref,
     required String eventTitle,
     required String message,
     required String absoluteLink,
@@ -210,6 +229,9 @@ Podés confirmar y cargar tu pago en segundos.
                     'text': whatsappMessage,
                   });
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  await ref
+                      .read(appAnalyticsProvider)
+                      .logPublicLinkShared('whatsapp');
                 },
               ),
               ListTile(
@@ -223,6 +245,9 @@ Podés confirmar y cargar tu pago en segundos.
                   final body = Uri.encodeComponent(message);
                   final uri = Uri.parse('mailto:?subject=$subject&body=$body');
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  await ref
+                      .read(appAnalyticsProvider)
+                      .logPublicLinkShared('email');
                 },
               ),
               ListTile(
@@ -231,6 +256,9 @@ Podés confirmar y cargar tu pago en segundos.
                 onTap: () async {
                   Navigator.of(sheetContext).pop();
                   await Clipboard.setData(ClipboardData(text: absoluteLink));
+                  await ref
+                      .read(appAnalyticsProvider)
+                      .logPublicLinkShared('copy_link');
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Link copiado al portapapeles'),
@@ -287,6 +315,7 @@ Podés confirmar y cargar tu pago en segundos.
       await ref
           .read(eventRepositoryProvider)
           .deleteEvent(eventId: eventId, slug: slug);
+      await ref.read(appAnalyticsProvider).logEventDeleted();
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(

@@ -54,6 +54,7 @@ class EventRepository {
     String? cvu,
     required String accountHolder,
     required bool isActive,
+    required bool autoApproveReceipts,
     required String slug,
     required String publicToken,
     required String createdBy,
@@ -100,8 +101,14 @@ class EventRepository {
     );
 
     final batch = _firestore.batch();
-    batch.set(_eventsRef.doc(eventId), event.toJson());
-    batch.set(_publicEventsRef.doc(slug), publicData.toJson());
+    batch.set(_eventsRef.doc(eventId), {
+      ...event.toJson(),
+      'autoApproveReceipts': autoApproveReceipts,
+    });
+    batch.set(_publicEventsRef.doc(slug), {
+      ...publicData.toJson(),
+      'autoApproveReceipts': autoApproveReceipts,
+    });
     await batch.commit();
 
     return eventId;

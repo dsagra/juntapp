@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/analytics_providers.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -187,6 +188,7 @@ class _BulkParticipantsSheetState
       final created = await ref
           .read(participantRepositoryProvider)
           .createParticipantsBulk(eventId: widget.eventId, childNames: names);
+      await ref.read(appAnalyticsProvider).logParticipantsBulkAdded(created);
 
       if (!mounted) return;
       Navigator.of(context).pop();

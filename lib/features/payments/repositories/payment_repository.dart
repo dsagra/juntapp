@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 
@@ -12,6 +13,7 @@ class PaymentRepository {
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
   final Uuid _uuid = const Uuid();
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   CollectionReference<Map<String, dynamic>> _ref(String eventId) {
     return _firestore.collection('events').doc(eventId).collection('payments');
@@ -58,6 +60,15 @@ class PaymentRepository {
   }) async {
     final paymentId = _uuid.v4();
     final now = DateTime.now();
+    final eventSnapshot = await _firestore
+        .collection('events')
+        .doc(eventId)
+        .get();
+    final autoApproveReceipts =
+        eventSnapshot.data()?['autoApproveReceipts'] == true;
+    final status = autoApproveReceipts
+        ? PaymentStatus.approved
+        : PaymentStatus.pending;
 
     String? receiptUrl;
     String? receiptPath;
@@ -90,9 +101,9 @@ class PaymentRepository {
       receiptUrl: receiptUrl,
       receiptPath: receiptPath,
       receiptType: effectiveReceiptType,
-      status: PaymentStatus.pending,
+      status: status,
       uploadedAt: now,
-      reviewedAt: null,
+      reviewedAt: autoApproveReceipts ? now : null,
       reviewedBy: null,
       rejectReason: null,
     );
@@ -101,10 +112,17 @@ class PaymentRepository {
     batch.set(_ref(eventId).doc(paymentId), payment.toJson());
     batch.set(
       _publicParticipantRef(eventId: eventId, participantId: participantId),
-      {'status': 'pending_payment', 'updatedAt': Timestamp.fromDate(now)},
+      {
+        'status': autoApproveReceipts ? 'paid' : 'pending_payment',
+        'updatedAt': Timestamp.fromDate(now),
+      },
       SetOptions(merge: true),
     );
     await batch.commit();
+    await _safeLog('payment_submitted');
+    if (autoApproveReceipts) {
+      await _safeLog('payment_approved');
+    }
   }
 
   Future<String> resolveReceiptUrl(String receiptPath) async {
@@ -141,6 +159,7 @@ class PaymentRepository {
       SetOptions(merge: true),
     );
     await batch.commit();
+    await _safeLog('payment_approved');
   }
 
   Future<void> rejectPayment({
@@ -174,5 +193,12 @@ class PaymentRepository {
       SetOptions(merge: true),
     );
     await batch.commit();
+    await _safeLog('payment_rejected');
+  }
+
+  Future<void> _safeLog(String name) async {
+    try {
+      await _analytics.logEvent(name: name);
+    } catch (_) {}
   }
 }
