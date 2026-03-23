@@ -67,6 +67,66 @@ class ParticipantRepository {
     await batch.commit();
   }
 
+  Future<int> createParticipantsBulk({
+    required String eventId,
+    required List<String> childNames,
+  }) async {
+    final normalized = childNames
+        .map((name) => name.trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+
+    if (normalized.isEmpty) return 0;
+
+    var created = 0;
+    WriteBatch batch = _firestore.batch();
+    var operations = 0;
+
+    for (final childName in normalized) {
+      final now = DateTime.now();
+      final id = _uuid.v4();
+      final participantToken = _uuid.v4().replaceAll('-', '').substring(0, 12);
+
+      final model = ParticipantModel(
+        id: id,
+        childName: childName,
+        familyName: null,
+        parentName: null,
+        parentPhone: null,
+        parentEmail: null,
+        participantToken: participantToken,
+        status: 'active',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      batch.set(_ref(eventId).doc(id), model.toJson());
+      batch.set(_publicRef(eventId).doc(id), {
+        'id': id,
+        'childName': childName,
+        'status': 'active',
+        'participantToken': participantToken,
+        'updatedAt': Timestamp.fromDate(now),
+      });
+
+      operations += 2;
+      created++;
+
+      if (operations >= 400) {
+        await batch.commit();
+        batch = _firestore.batch();
+        operations = 0;
+      }
+    }
+
+    if (operations > 0) {
+      await batch.commit();
+    }
+
+    return created;
+  }
+
   Future<void> updateParticipant({
     required String eventId,
     required ParticipantModel participant,

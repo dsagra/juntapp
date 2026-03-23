@@ -21,7 +21,7 @@ class ParticipantsPage extends ConsumerWidget {
     return AppMobileShell(
       title: 'Participantes',
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditor(context, ref),
+        onPressed: () => _openAddOptions(context, ref),
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text('Agregar'),
       ),
@@ -103,6 +103,165 @@ class ParticipantsPage extends ConsumerWidget {
           participant: participant,
         );
       },
+    );
+  }
+
+  Future<void> _openAddOptions(BuildContext context, WidgetRef ref) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person_add_alt_1_outlined),
+                title: const Text('Agregar participante'),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _openEditor(context, ref);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add_outlined),
+                title: const Text('Carga rápida (varios a la vez)'),
+                subtitle: const Text('Pegá una lista de nombres'),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _openBulkEditor(context, ref);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openBulkEditor(BuildContext context, WidgetRef ref) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return _BulkParticipantsSheet(eventId: eventId);
+      },
+    );
+  }
+}
+
+class _BulkParticipantsSheet extends ConsumerStatefulWidget {
+  const _BulkParticipantsSheet({required this.eventId});
+
+  final String eventId;
+
+  @override
+  ConsumerState<_BulkParticipantsSheet> createState() =>
+      _BulkParticipantsSheetState();
+}
+
+class _BulkParticipantsSheetState
+    extends ConsumerState<_BulkParticipantsSheet> {
+  final _namesCtrl = TextEditingController();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _namesCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveBulk() async {
+    final names = _parseNames(_namesCtrl.text);
+    if (names.isEmpty) {
+      setState(() => _error = 'Pegá al menos un nombre.');
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    try {
+      final created = await ref
+          .read(participantRepositoryProvider)
+          .createParticipantsBulk(eventId: widget.eventId, childNames: names);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Se agregaron $created participantes.')),
+      );
+    } catch (_) {
+      setState(() => _error = 'No se pudieron agregar los participantes.');
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  List<String> _parseNames(String input) {
+    return input
+        .split(RegExp(r'[\n,;]'))
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Carga rápida de participantes',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Pegá nombres separados por línea, coma o punto y coma.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _namesCtrl,
+                  label: 'Lista de nombres',
+                  hint: 'Juan\nMaría\nPedro',
+                  maxLines: 8,
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                PrimaryButton(
+                  label: 'Agregar participantes',
+                  loading: _saving,
+                  onPressed: _saveBulk,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -16,16 +16,11 @@ final participantsProvider =
           .watchParticipants(eventId);
     });
 
-final participantsCountProvider = FutureProvider.family<int, String>((
+final participantsCountProvider = Provider.family<AsyncValue<int>, String>((
   ref,
   eventId,
-) async {
-  final firestore = ref.watch(firestoreProvider);
-  final result = await firestore
-      .collection('events')
-      .doc(eventId)
-      .collection('participants')
-      .count()
-      .get();
-  return result.count ?? 0;
+) {
+  return ref
+      .watch(participantsProvider(eventId))
+      .whenData((items) => items.length);
 });
