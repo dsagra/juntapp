@@ -99,20 +99,76 @@ class _ReceiptUploaderState extends State<ReceiptUploader> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OutlinedButton.icon(
-          onPressed: _pickFile,
-          icon: const Icon(Icons.upload_file),
-          label: const Text('Subir comprobante'),
+        InkWell(
+          borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+          onTap: _pickFile,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.7),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Icon(
+                    Icons.cloud_upload_outlined,
+                    color: scheme.onPrimaryContainer,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _fileName == null ? 'Subir archivo' : 'Archivo seleccionado',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _fileName == null
+                      ? 'JPG, PNG, WEBP o PDF (máx. 8MB)'
+                      : _fileName!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
         ),
         if (_fileName != null) ...[
           const SizedBox(height: 8),
-          Text('Archivo: $_fileName'),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Archivo: $_fileName',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: _pickFile,
+                icon: const Icon(Icons.swap_horiz_outlined),
+                label: const Text('Cambiar'),
+              ),
+            ],
+          ),
         ],
         if (_error != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             _error!,
             style: TextStyle(color: Theme.of(context).colorScheme.error),

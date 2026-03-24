@@ -129,13 +129,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ),
       child: eventsAsync.when(
         data: (events) {
+          final participantsByEvent = {
+            for (final event in events)
+              event.id: ref.watch(participantsCountProvider(event.id)),
+          };
+          final approvedByEvent = {
+            for (final event in events)
+              event.id: ref.watch(approvedPaymentsCountProvider(event.id)),
+          };
+          final pendingByEvent = {
+            for (final event in events)
+              event.id: ref.watch(pendingPaymentsCountProvider(event.id)),
+          };
+
           if (events.isEmpty) {
-            return const Column(
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                BrandLogo(size: 72, showWordmark: false),
-                SizedBox(height: 12),
-                EmptyStateWidget(
+                const BrandLogo(size: 72, showWordmark: false),
+                const SizedBox(height: AppConstants.sectionGap),
+                const EmptyStateWidget(
                   title: 'Aún no tenés eventos',
                   subtitle:
                       'Creá tu primer evento para empezar a recibir pagos.',
@@ -149,22 +162,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const BrandLogo(size: 72, showWordmark: false),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppConstants.sectionGap),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Juntas activas',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  _CounterBadge(label: '${events.length} total'),
+                ],
+              ),
+              const SizedBox(height: 10),
               ...events
                   .asMap()
                   .entries
                   .map((entry) {
                     final index = entry.key;
                     final event = entry.value;
-                    final participantsCount = ref.watch(
-                      participantsCountProvider(event.id),
-                    );
-                    final approvedCount = ref.watch(
-                      approvedPaymentsCountProvider(event.id),
-                    );
-                    final pendingCount = ref.watch(
-                      pendingPaymentsCountProvider(event.id),
-                    );
+                    final participantsCount = participantsByEvent[event.id]!;
+                    final approvedCount = approvedByEvent[event.id]!;
+                    final pendingCount = pendingByEvent[event.id]!;
 
                     return Padding(
                       padding: EdgeInsets.only(
@@ -188,6 +207,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Text('Error: $error'),
       ),
+    );
+  }
+}
+
+class _CounterBadge extends StatelessWidget {
+  const _CounterBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.labelSmall),
     );
   }
 }

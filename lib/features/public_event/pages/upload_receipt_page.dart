@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/app_formatters.dart';
 import '../../../shared/widgets/app_dropdown_field.dart';
 import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
-import '../../../shared/widgets/primary_button.dart';
-import '../../../shared/widgets/section_card.dart';
 import '../../payments/providers/payment_providers.dart';
 import '../providers/public_event_providers.dart';
 import '../widgets/receipt_uploader.dart';
@@ -27,7 +26,6 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   final _payerCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
-  final _tokenCtrl = TextEditingController();
 
   String? _participantId;
   PickedReceipt? _receipt;
@@ -36,17 +34,10 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   bool _amountPrefilled = false;
 
   @override
-  void initState() {
-    super.initState();
-    _tokenCtrl.text = widget.token;
-  }
-
-  @override
   void dispose() {
     _payerCtrl.dispose();
     _amountCtrl.dispose();
     _notesCtrl.dispose();
-    _tokenCtrl.dispose();
     super.dispose();
   }
 
@@ -109,11 +100,15 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
     final eventAsync = ref.watch(publicEventBySlugProvider(widget.slug));
 
     return AppMobileShell(
-      title: 'Subir comprobante',
+      title: 'Enviar pago',
       child: eventAsync.when(
         data: (event) {
-          if (event == null) {
-            return const Text('Evento no encontrado');
+          if (event == null || !event.isActive) {
+            return const _UploadMessageState(
+              icon: Icons.event_busy_outlined,
+              title: 'Evento no disponible',
+              message: 'Este evento ya no acepta comprobantes.',
+            );
           }
 
           if (!_amountPrefilled) {
@@ -122,7 +117,11 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
           }
 
           if (!_hasValidToken(event.publicToken, widget.token)) {
-            return const Text('Link inválido. Revisá el enlace completo.');
+            return const _UploadMessageState(
+              icon: Icons.vpn_key_outlined,
+              title: 'Link inválido',
+              message: 'Revisá que el enlace tenga el token completo.',
+            );
           }
 
           final participantsAsync = ref.watch(
@@ -169,19 +168,60 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Confirmación de pago',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Completá los datos para que el organizador pueda validar tu aporte.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.cardRadius,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Detalle del pago',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  event.title,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              ),
+                              Text(
+                                AppFormatters.currency(
+                                  event.amountPerParticipant,
+                                ),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppConstants.sectionGap),
-                    SectionCard(
-                      title: 'Datos del pago',
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.cardRadius,
+                        ),
+                      ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           AppDropdownField<String>(
                             label: 'Hijo/a',
@@ -213,33 +253,12 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
-                            controller: _tokenCtrl,
+                            controller: _amountCtrl,
                             readOnly: true,
                             decoration: const InputDecoration(
-                              labelText: 'Token del enlace',
-                              prefixIcon: Icon(Icons.vpn_key_outlined),
+                              labelText: 'Monto a transferir',
+                              prefixIcon: Icon(Icons.payments_outlined),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          AppTextField(
-                            controller: _amountCtrl,
-                            label: 'Monto abonado',
-                            hint: 'Ej: 15000',
-                            prefixIcon: Icons.payments_outlined,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-                              if (text.isEmpty) {
-                                return 'Campo obligatorio';
-                              }
-                              final amount = double.tryParse(text);
-                              if (amount == null || amount <= 0) {
-                                return 'Monto inválido';
-                              }
-                              return null;
-                            },
                           ),
                           const SizedBox(height: 12),
                           AppTextField(
@@ -252,19 +271,44 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                       ),
                     ),
                     const SizedBox(height: AppConstants.sectionGap),
-                    SectionCard(
-                      title: 'Comprobante',
-                      subtitle: 'Obligatorio para enviar el pago.',
-                      child: ReceiptUploader(
-                        onChanged: (receipt) {
-                          setState(() {
-                            _receipt = receipt;
-                            if (receipt != null &&
-                                _error == 'El comprobante es obligatorio.') {
-                              _error = null;
-                            }
-                          });
-                        },
+                    Text(
+                      'Adjuntar comprobante',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    ReceiptUploader(
+                      onChanged: (receipt) {
+                        setState(() {
+                          _receipt = receipt;
+                          if (receipt != null &&
+                              _error == 'El comprobante es obligatorio.') {
+                            _error = null;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Asegurate de que el número de operación y el monto sean visibles.',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     if (_error != null) ...[
@@ -277,10 +321,20 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
                       ),
                     ],
                     const SizedBox(height: AppConstants.sectionGap),
-                    PrimaryButton(
-                      label: 'Enviar comprobante',
-                      loading: _saving,
-                      onPressed: () => _submit(event.eventId),
+                    FilledButton.icon(
+                      onPressed: _saving ? null : () => _submit(event.eventId),
+                      icon: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.cloud_upload_outlined),
+                      label: Text(
+                        _saving
+                            ? 'Enviando comprobante...'
+                            : 'Enviar comprobante',
+                      ),
                     ),
                   ],
                 ),
@@ -311,5 +365,40 @@ class _UploadReceiptPageState extends ConsumerState<UploadReceiptPage> {
   String _formatAmount(double amount) {
     final hasDecimals = amount != amount.truncateToDouble();
     return hasDecimals ? amount.toStringAsFixed(2) : amount.toInt().toString();
+  }
+}
+
+class _UploadMessageState extends StatelessWidget {
+  const _UploadMessageState({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 40),
+        Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
   }
 }

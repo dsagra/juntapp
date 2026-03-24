@@ -7,17 +7,28 @@ import '../../../shared/widgets/app_mobile_shell.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/empty_state_widget.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../payments/models/payment_model.dart';
+import '../../payments/providers/payment_providers.dart';
 import '../models/participant_model.dart';
 import '../providers/participant_providers.dart';
 
-class ParticipantsPage extends ConsumerWidget {
+class ParticipantsPage extends ConsumerStatefulWidget {
   const ParticipantsPage({super.key, required this.eventId});
 
   final String eventId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ParticipantsPage> createState() => _ParticipantsPageState();
+}
+
+class _ParticipantsPageState extends ConsumerState<ParticipantsPage> {
+  _ParticipantsFilter _selectedFilter = _ParticipantsFilter.all;
+
+  @override
+  Widget build(BuildContext context) {
+    final eventId = widget.eventId;
     final participantsAsync = ref.watch(participantsProvider(eventId));
+    final paymentsAsync = ref.watch(paymentsProvider(eventId));
 
     return AppMobileShell(
       title: 'Participantes',
@@ -28,7 +39,8 @@ class ParticipantsPage extends ConsumerWidget {
       ),
       child: participantsAsync.when(
         data: (participants) {
-          if (participants.isEmpty) {
+          if (participants.isEmpty &&
+              _selectedFilter == _ParticipantsFilter.all) {
             return const EmptyStateWidget(
               title: 'No hay participantes',
               subtitle:
@@ -37,51 +49,215 @@ class ParticipantsPage extends ConsumerWidget {
             );
           }
 
+          final latestPaymentStatusByParticipant = <String, PaymentStatus>{};
+          for (final payment in paymentsAsync.valueOrNull ?? <PaymentModel>[]) {
+            latestPaymentStatusByParticipant.putIfAbsent(
+              payment.participantId,
+              () => payment.status,
+            );
+          }
+
+          final sortedParticipants = [...participants]
+            ..sort((a, b) {
+              final aStatus = _resolveStatus(
+                latestPaymentStatusByParticipant[a.id],
+              );
+              final bStatus = _resolveStatus(
+                latestPaymentStatusByParticipant[b.id],
+              );
+
+              final rankCompare = _statusSortRank(
+                aStatus,
+              ).compareTo(_statusSortRank(bStatus));
+              if (rankCompare != 0) return rankCompare;
+
+              return a.childName.toLowerCase().compareTo(
+                b.childName.toLowerCase(),
+              );
+            });
+
+          final statusByParticipant = {
+            for (final participant in sortedParticipants)
+              participant.id: _resolveStatus(
+                latestPaymentStatusByParticipant[participant.id],
+              ),
+          };
+
+          final paidCount = statusByParticipant.values
+              .where((status) => status == _ParticipantPaymentViewStatus.paid)
+              .length;
+          final pendingReviewCount = statusByParticipant.values
+              .where(
+                (status) =>
+                    status == _ParticipantPaymentViewStatus.pendingReview,
+              )
+              .length;
+          final unpaidCount = statusByParticipant.values
+              .where((status) => status == _ParticipantPaymentViewStatus.unpaid)
+              .length;
+
+          final filteredParticipants = sortedParticipants
+              .where((participant) {
+                final status = statusByParticipant[participant.id]!;
+                switch (_selectedFilter) {
+                  case _ParticipantsFilter.all:
+                    return true;
+                  case _ParticipantsFilter.unpaid:
+                    return status == _ParticipantPaymentViewStatus.unpaid;
+                  case _ParticipantsFilter.pendingReview:
+                    return status ==
+                        _ParticipantPaymentViewStatus.pendingReview;
+                  case _ParticipantsFilter.paid:
+                    return status == _ParticipantPaymentViewStatus.paid;
+                }
+              })
+              .toList(growable: false);
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: participants
-                .map((participant) {
+            children: [
+              _ParticipantsSummary(
+                totalParticipants: participants.length,
+                paidCount: paidCount,
+                pendingReviewCount: pendingReviewCount,
+                unpaidCount: unpaidCount,
+              ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _ParticipantsFilterChip(
+                      label: 'Todos',
+                      selected: _selectedFilter == _ParticipantsFilter.all,
+                      onTap: () => setState(
+                        () => _selectedFilter = _ParticipantsFilter.all,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ParticipantsFilterChip(
+                      label: 'Falta pago',
+                      selected: _selectedFilter == _ParticipantsFilter.unpaid,
+                      onTap: () => setState(
+                        () => _selectedFilter = _ParticipantsFilter.unpaid,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ParticipantsFilterChip(
+                      label: 'En revisión',
+                      selected:
+                          _selectedFilter == _ParticipantsFilter.pendingReview,
+                      onTap: () => setState(
+                        () =>
+                            _selectedFilter = _ParticipantsFilter.pendingReview,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ParticipantsFilterChip(
+                      label: 'Pagó',
+                      selected: _selectedFilter == _ParticipantsFilter.paid,
+                      onTap: () => setState(
+                        () => _selectedFilter = _ParticipantsFilter.paid,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (filteredParticipants.isEmpty)
+                const EmptyStateWidget(
+                  title: 'Sin participantes para este filtro',
+                  subtitle: 'Probá con otra vista para ver más resultados.',
+                  icon: Icons.filter_alt_off_outlined,
+                )
+              else
+                ...filteredParticipants.map((participant) {
+                  final status = statusByParticipant[participant.id]!;
+                  final label = participant.childName.trim();
+                  final initial = label.isEmpty
+                      ? '?'
+                      : label.characters.first.toUpperCase();
+
                   return Card(
                     margin: const EdgeInsets.only(
                       bottom: AppConstants.sectionGap,
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(12),
-                      title: Text(participant.childName),
-                      subtitle: Text(
-                        [
-                          if ((participant.familyName ?? '').isNotEmpty)
-                            participant.familyName,
-                          if ((participant.parentName ?? '').isNotEmpty)
-                            participant.parentName,
-                        ].join(' • '),
-                      ),
-                      trailing: Wrap(
-                        spacing: 2,
+                    color: _cardColor(context, status),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
                         children: [
-                          IconButton(
-                            onPressed: () => _openEditor(
-                              context,
-                              ref,
-                              participant: participant,
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(999),
                             ),
-                            icon: const Icon(Icons.edit_outlined),
+                            alignment: Alignment.center,
+                            child: Text(
+                              initial,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
-                          IconButton(
-                            onPressed: () => ref
-                                .read(participantRepositoryProvider)
-                                .deleteParticipant(
-                                  eventId: eventId,
-                                  participantId: participant.id,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  participant.childName,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
-                            icon: const Icon(Icons.delete_outline),
+                                const SizedBox(height: 2),
+                                Text(
+                                  [
+                                    if ((participant.familyName ?? '')
+                                        .isNotEmpty)
+                                      participant.familyName,
+                                    if ((participant.parentName ?? '')
+                                        .isNotEmpty)
+                                      participant.parentName,
+                                  ].join(' • '),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 8),
+                                _StatusBadge(status: status),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => _openEditor(
+                                  context,
+                                  ref,
+                                  participant: participant,
+                                ),
+                                icon: const Icon(Icons.edit_outlined),
+                              ),
+                              IconButton(
+                                onPressed: () => ref
+                                    .read(participantRepositoryProvider)
+                                    .deleteParticipant(
+                                      eventId: eventId,
+                                      participantId: participant.id,
+                                    ),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   );
-                })
-                .toList(growable: false),
+                }),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -100,7 +276,7 @@ class ParticipantsPage extends ConsumerWidget {
       isScrollControlled: true,
       builder: (context) {
         return _ParticipantEditorSheet(
-          eventId: eventId,
+          eventId: widget.eventId,
           participant: participant,
         );
       },
@@ -144,8 +320,260 @@ class ParticipantsPage extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return _BulkParticipantsSheet(eventId: eventId);
+        return _BulkParticipantsSheet(eventId: widget.eventId);
       },
+    );
+  }
+}
+
+enum _ParticipantsFilter { all, unpaid, pendingReview, paid }
+
+class _ParticipantsSummary extends StatelessWidget {
+  const _ParticipantsSummary({
+    required this.totalParticipants,
+    required this.paidCount,
+    required this.pendingReviewCount,
+    required this.unpaidCount,
+  });
+
+  final int totalParticipants;
+  final int paidCount;
+  final int pendingReviewCount;
+  final int unpaidCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppConstants.cardRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Estado del grupo',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$totalParticipants participantes',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Icon(Icons.group, color: scheme.onPrimaryContainer),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryStatCard(
+                  label: 'Pagaron',
+                  value: '$paidCount',
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryStatCard(
+                  label: 'En revisión',
+                  value: '$pendingReviewCount',
+                  color: scheme.tertiary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryStatCard(
+                  label: 'Falta pago',
+                  value: '$unpaidCount',
+                  color: scheme.error,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryStatCard extends StatelessWidget {
+  const _SummaryStatCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ParticipantsFilterChip extends StatelessWidget {
+  const _ParticipantsFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? scheme.primary : scheme.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _ParticipantPaymentViewStatus { paid, pendingReview, unpaid }
+
+_ParticipantPaymentViewStatus _resolveStatus(PaymentStatus? paymentStatus) {
+  switch (paymentStatus) {
+    case PaymentStatus.approved:
+      return _ParticipantPaymentViewStatus.paid;
+    case PaymentStatus.pending:
+      return _ParticipantPaymentViewStatus.pendingReview;
+    case PaymentStatus.rejected:
+    case null:
+      return _ParticipantPaymentViewStatus.unpaid;
+  }
+}
+
+int _statusSortRank(_ParticipantPaymentViewStatus status) {
+  switch (status) {
+    case _ParticipantPaymentViewStatus.unpaid:
+      return 0;
+    case _ParticipantPaymentViewStatus.pendingReview:
+      return 1;
+    case _ParticipantPaymentViewStatus.paid:
+      return 2;
+  }
+}
+
+Color _cardColor(BuildContext context, _ParticipantPaymentViewStatus status) {
+  final scheme = Theme.of(context).colorScheme;
+  switch (status) {
+    case _ParticipantPaymentViewStatus.paid:
+      return scheme.primaryContainer.withValues(alpha: 0.35);
+    case _ParticipantPaymentViewStatus.pendingReview:
+      return scheme.tertiaryContainer.withValues(alpha: 0.35);
+    case _ParticipantPaymentViewStatus.unpaid:
+      return scheme.errorContainer.withValues(alpha: 0.2);
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final _ParticipantPaymentViewStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    final (label, icon, bgColor, textColor) = switch (status) {
+      _ParticipantPaymentViewStatus.paid => (
+        'Pagó',
+        Icons.check_circle,
+        scheme.primaryContainer,
+        scheme.onPrimaryContainer,
+      ),
+      _ParticipantPaymentViewStatus.pendingReview => (
+        'Comprobante enviado',
+        Icons.schedule,
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      _ParticipantPaymentViewStatus.unpaid => (
+        'Falta pago',
+        Icons.error_outline,
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

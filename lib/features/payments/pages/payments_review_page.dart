@@ -33,73 +33,70 @@ class PaymentsReviewPage extends ConsumerWidget {
             );
           }
 
+          final pendingPayments = payments
+              .where((payment) => payment.status == PaymentStatus.pending)
+              .toList(growable: false);
+
+          final orderedPayments = [...payments]
+            ..sort((a, b) {
+              final aPending = a.status == PaymentStatus.pending ? 0 : 1;
+              final bPending = b.status == PaymentStatus.pending ? 0 : 1;
+              final rankCompare = aPending.compareTo(bPending);
+              if (rankCompare != 0) return rankCompare;
+              return b.uploadedAt.compareTo(a.uploadedAt);
+            });
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: payments
-                .map((payment) {
-                  return Card(
-                    margin: const EdgeInsets.only(
-                      bottom: AppConstants.sectionGap,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            payment.childName,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 6),
-                          Text('Pagador: ${payment.payerName}'),
-                          Text(
-                            'Monto: ${AppFormatters.currency(payment.amount)}',
-                          ),
-                          Text(
-                            'Fecha: ${AppFormatters.date(payment.uploadedAt)}',
-                          ),
-                          const SizedBox(height: 8),
-                          PaymentStatusChip(status: payment.status),
-                          if ((payment.rejectReason ?? '').isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text('Motivo: ${payment.rejectReason}'),
-                            ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              if ((payment.receiptUrl ?? '').isNotEmpty ||
-                                  (payment.receiptPath ?? '').isNotEmpty)
-                                OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _openReceipt(context, ref, payment),
-                                  icon: const Icon(Icons.open_in_new),
-                                  label: const Text('Ver comprobante'),
-                                )
-                              else
-                                const Chip(label: Text('Sin comprobante')),
-                              if (payment.status == PaymentStatus.pending)
-                                FilledButton(
-                                  onPressed: () =>
-                                      _approve(context, ref, payment.id),
-                                  child: const Text('Aprobar'),
-                                ),
-                              if (payment.status == PaymentStatus.pending)
-                                OutlinedButton(
-                                  onPressed: () =>
-                                      _reject(context, ref, payment.id),
-                                  child: const Text('Rechazar'),
-                                ),
-                            ],
-                          ),
-                        ],
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: pendingPayments.isNotEmpty
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                  );
-                })
-                .toList(growable: false),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        pendingPayments.isNotEmpty
+                            ? '${pendingPayments.length} pago(s) pendiente(s) por revisar'
+                            : 'No hay pagos pendientes por revisar',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...orderedPayments.map(
+                (payment) => _PaymentReviewCard(
+                  payment: payment,
+                  onOpenReceipt: () => _openReceipt(context, ref, payment),
+                  onApprove: payment.status == PaymentStatus.pending
+                      ? () => _approve(context, ref, payment.id)
+                      : null,
+                  onReject: payment.status == PaymentStatus.pending
+                      ? () => _reject(context, ref, payment.id)
+                      : null,
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -195,5 +192,144 @@ class PaymentsReviewPage extends ConsumerWidget {
     );
 
     reasonCtrl.dispose();
+  }
+}
+
+class _PaymentReviewCard extends StatelessWidget {
+  const _PaymentReviewCard({
+    required this.payment,
+    required this.onOpenReceipt,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  final PaymentModel payment;
+  final VoidCallback onOpenReceipt;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _initials(payment.payerName);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppConstants.sectionGap),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${payment.payerName} subió comprobante por ${AppFormatters.currency(payment.amount)}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${payment.childName} • ${AppFormatters.date(payment.uploadedAt)}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initials,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            PaymentStatusChip(status: payment.status),
+            if (payment.notes.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  payment.notes,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ],
+            if ((payment.rejectReason ?? '').isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Motivo: ${payment.rejectReason}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            if ((payment.receiptUrl ?? '').isNotEmpty ||
+                (payment.receiptPath ?? '').isNotEmpty)
+              OutlinedButton.icon(
+                onPressed: onOpenReceipt,
+                icon: const Icon(Icons.visibility_outlined),
+                label: const Text('Ver comprobante'),
+              )
+            else
+              const Chip(label: Text('Sin comprobante')),
+            if (onApprove != null) ...[
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                onPressed: onApprove,
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('Aprobar pago'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: onReject,
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Rechazar'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _initials(String fullName) {
+    final words = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList(growable: false);
+    if (words.isEmpty) return '?';
+    if (words.length == 1) {
+      return words.first.substring(0, 1).toUpperCase();
+    }
+    final firstInitial = words.first.substring(0, 1).toUpperCase();
+    final lastInitial = words.last.substring(0, 1).toUpperCase();
+    return '$firstInitial$lastInitial';
   }
 }

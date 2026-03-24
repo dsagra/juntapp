@@ -21,6 +21,7 @@ class EventRepository {
       snapshot,
     ) {
       final events = snapshot.docs
+          .where((doc) => doc.data()['deletedAt'] == null)
           .map((doc) => EventModel.fromJson(doc.data()))
           .toList(growable: false);
 
@@ -34,6 +35,9 @@ class EventRepository {
       final data = doc.data();
       if (data == null) {
         throw StateError('Evento no encontrado');
+      }
+      if (data['deletedAt'] != null) {
+        throw StateError('Evento eliminado');
       }
       return EventModel.fromJson(data);
     });
@@ -118,48 +122,18 @@ class EventRepository {
     required String eventId,
     required String slug,
   }) async {
-    await _deleteSubcollectionDocs(eventId: eventId, subcollection: 'payments');
-    await _deleteSubcollectionDocs(
-      eventId: eventId,
-      subcollection: 'participants',
-    );
-    await _deleteSubcollectionDocs(
-      eventId: eventId,
-      subcollection: 'public_participants',
-    );
+    final now = DateTime.now();
 
     final batch = _firestore.batch();
-    batch.delete(_eventsRef.doc(eventId));
-    batch.delete(_publicEventsRef.doc(slug));
+    batch.update(_eventsRef.doc(eventId), {
+      'deletedAt': Timestamp.fromDate(now),
+      'isActive': false,
+      'updatedAt': Timestamp.fromDate(now),
+    });
+    batch.update(_publicEventsRef.doc(slug), {
+      'deletedAt': Timestamp.fromDate(now),
+      'isActive': false,
+    });
     await batch.commit();
-  }
-
-  Future<void> _deleteSubcollectionDocs({
-    required String eventId,
-    required String subcollection,
-  }) async {
-    final snapshot = await _eventsRef
-        .doc(eventId)
-        .collection(subcollection)
-        .get();
-    if (snapshot.docs.isEmpty) return;
-
-    WriteBatch batch = _firestore.batch();
-    var operationCount = 0;
-
-    for (final doc in snapshot.docs) {
-      batch.delete(doc.reference);
-      operationCount++;
-
-      if (operationCount == 450) {
-        await batch.commit();
-        batch = _firestore.batch();
-        operationCount = 0;
-      }
-    }
-
-    if (operationCount > 0) {
-      await batch.commit();
-    }
   }
 }

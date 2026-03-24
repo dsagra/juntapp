@@ -64,7 +64,7 @@ class FirebaseAuthService {
       'id': user.uid,
       'email': user.email,
       'displayName': user.displayName,
-      'photoUrl': user.photoURL,
+      'photoUrl': FieldValue.delete(),
       'provider': 'google',
       if (!existing.exists) 'createdAt': Timestamp.fromDate(DateTime.now()),
       'updatedAt': Timestamp.fromDate(DateTime.now()),
